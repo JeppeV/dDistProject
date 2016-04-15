@@ -34,6 +34,15 @@ public class DocumentEventCapturer extends DocumentFilter {
         return eventHistory.take();
     }
 
+    public void put(MyTextEvent textEvent) throws InterruptedException {
+        eventHistory.put(textEvent);
+    }
+
+    public void clear() throws InterruptedException {
+        eventHistory.clear();
+    }
+
+
     public void insertString(FilterBypass fb, int offset,
                              String str, AttributeSet a)
             throws BadLocationException {

@@ -47,6 +47,8 @@ public class EventReplayer implements Runnable {
                  */
                         }
                     });
+                } else if (mte instanceof ShutDownTextEvent){
+                    break;
                 }
             } catch (Exception _) {
                 wasInterrupted = true;

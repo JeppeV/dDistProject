@@ -18,11 +18,11 @@ public class DistributedTextEditor extends JFrame {
     private static final int PORT_NUMBER = 40103;
     private JTextArea area1 = new JTextArea(20, 120);
     private JTextArea area2 = new JTextArea(20, 120);
-    private JTextField ipaddress = new JTextField("IP address here");
-    private JTextField portNumber = new JTextField("Port number here");
+    private JTextField ipaddress = new JTextField("10.192.82.78");
+    private JTextField portNumber = new JTextField("40103");
 
-   // private EventReplayer er;
-   // private Thread ert;
+    private boolean isServer;
+    private ServerSocket serverSocket;
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -85,27 +85,19 @@ public class DistributedTextEditor extends JFrame {
         area1.addKeyListener(k1);
         setTitle("Disconnected");
         setVisible(true);
-        area1.insert("Example of how to capture stuff from the event queue and replay it in another buffer.\n" +
-                "Try to type and delete stuff in the top area.\n" +
-                "Then figure out how it works.\n", 0);
 
-        /*
-        er = new EventReplayer(dec, area2);
-        ert = new Thread(er);
-        ert.start();
-        */
     }
 
     private void initThreads(Socket socket){
         TextEventSender sender = new TextEventSender(dec, socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket);
+        TextEventReceiver receiver = new TextEventReceiver(dec, socket);
         EventReplayer eventReplayer = new EventReplayer(receiver, area2);
-        Thread t1 = new Thread(sender);
-        Thread t2 = new Thread(receiver);
-        Thread t3 = new Thread(eventReplayer);
-        t1.start();
-        t2.start();
-        t3.start();
+        Thread senderThread = new Thread(sender);
+        Thread receiverThread = new Thread(receiver);
+        Thread eventReplayerThread = new Thread(eventReplayer);
+        senderThread.start();
+        receiverThread.start();
+        eventReplayerThread.start();
     }
 
     private KeyListener k1 = new KeyAdapter() {
@@ -120,22 +112,24 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             area1.setText("");
+
             String address = getLocalHostAddress();
-            ServerSocket serverSocket = registerOnPort(PORT_NUMBER);
+            serverSocket = registerOnPort(PORT_NUMBER);
             setTitle("I'm listening on: " + address + ":" + PORT_NUMBER + " - editor is inactive while awaiting connection");
-            Socket clientSocket = waitForConnectionFromClient(serverSocket);
-            if(clientSocket != null){
-                initThreads(clientSocket);
-                setTitle("Connection established to: "  + clientSocket);
+            isServer = true;
+            Socket socket = waitForConnectionFromClient(serverSocket);
+            if(socket != null){
+                initThreads(socket);
+                setTitle("Connection established to: "  + socket);
             }else{
                 setTitle("Connection failed");
             }
-
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
         }
     };
+
 
     private ServerSocket registerOnPort(int portNumber) {
         ServerSocket serverSocket = null;
@@ -197,6 +191,8 @@ public class DistributedTextEditor extends JFrame {
         try{
             socket = new Socket(serverAddress, Integer.parseInt(portNumber));
         } catch (IOException e){
+            e.printStackTrace();
+            // TODO
         }
         return socket;
     }
@@ -204,7 +200,19 @@ public class DistributedTextEditor extends JFrame {
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
             setTitle("Disconnected");
-            // TODO
+            try {
+                if(isServer){
+                    serverSocket.close();
+                    isServer = false;
+                }
+                dec.put(new ShutDownTextEvent(false));
+            } catch (InterruptedException ie){
+                //TODO
+
+            } catch (IOException ioe) {
+
+            }
+
         }
     };
 

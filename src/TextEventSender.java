@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
@@ -9,6 +8,7 @@ import java.net.Socket;
 public class TextEventSender implements Runnable {
     private DocumentEventCapturer documentEventCapturer;
     private Socket socket;
+    boolean shutdown;
 
     public TextEventSender(DocumentEventCapturer documentEventCapturer, Socket socket){
         this.documentEventCapturer = documentEventCapturer;
@@ -24,7 +24,17 @@ public class TextEventSender implements Runnable {
             while (true){
                 textEvent = documentEventCapturer.take();
                 objectOutputStream.writeObject(textEvent);
-            } // break for null
+                if(textEvent instanceof ShutDownTextEvent) {
+                    shutdown = ((ShutDownTextEvent) textEvent).getShutdown();
+                    break;
+                }
+            }
+            if(shutdown){
+                socket.close();
+            }
+
+            System.out.println("Sender terminated");
+
         } catch (IOException e){
             //TODO
         } catch (InterruptedException e) {
