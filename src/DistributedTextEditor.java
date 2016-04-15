@@ -8,16 +8,21 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class DistributedTextEditor extends JFrame {
 
+    private static final int PORT_NUMBER = 40103;
     private JTextArea area1 = new JTextArea(20, 120);
     private JTextArea area2 = new JTextArea(20, 120);
     private JTextField ipaddress = new JTextField("IP address here");
     private JTextField portNumber = new JTextField("Port number here");
 
-    private EventReplayer er;
-    private Thread ert;
+   // private EventReplayer er;
+   // private Thread ert;
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -84,9 +89,23 @@ public class DistributedTextEditor extends JFrame {
                 "Try to type and delete stuff in the top area.\n" +
                 "Then figure out how it works.\n", 0);
 
+        /*
         er = new EventReplayer(dec, area2);
         ert = new Thread(er);
         ert.start();
+        */
+    }
+
+    private void initThreads(Socket socket){
+        TextEventSender sender = new TextEventSender(dec, socket);
+        TextEventReceiver receiver = new TextEventReceiver(socket);
+        EventReplayer eventReplayer = new EventReplayer(receiver, area2);
+        Thread t1 = new Thread(sender);
+        Thread t2 = new Thread(receiver);
+        Thread t3 = new Thread(eventReplayer);
+        t1.start();
+        t2.start();
+        t3.start();
     }
 
     private KeyListener k1 = new KeyAdapter() {
@@ -101,24 +120,86 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             area1.setText("");
-            // TODO: Become a server listening for connections on some port.
-            setTitle("I'm listening on xxx.xxx.xxx:zzzz");
+            String address = getLocalHostAddress();
+            ServerSocket serverSocket = registerOnPort(PORT_NUMBER);
+            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER + " - editor is inactive while awaiting connection");
+            Socket clientSocket = waitForConnectionFromClient(serverSocket);
+            if(clientSocket != null){
+                initThreads(clientSocket);
+                setTitle("Connection established to: "  + clientSocket);
+            }else{
+                setTitle("Connection failed");
+            }
+
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
         }
     };
 
+    private ServerSocket registerOnPort(int portNumber) {
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(portNumber);
+        } catch (IOException e) {
+            System.err.println("Cannot open server socket on port number" + portNumber);
+            System.err.println(e);
+            System.exit(-1);
+        }
+        return serverSocket;
+    }
+
+    private String getLocalHostAddress(){
+        String address = null;
+        try {
+            InetAddress localHost = InetAddress.getLocalHost();
+            address = localHost.getHostAddress();
+        } catch (UnknownHostException e) {
+            System.err.println("Cannot resolve Internet address of the local host");
+            System.err.println(e);
+            System.exit(-1);
+        }
+        return address;
+    }
+
+    private Socket waitForConnectionFromClient(ServerSocket serverSocket) {
+        Socket res = null;
+        try {
+            res = serverSocket.accept();
+        } catch (IOException e) {
+            // We return null on IOExceptions
+        }
+        return res;
+    }
+
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             area1.setText("");
-            setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
+
+            // Connecting to the server
+            setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
+            Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
+            if(socket != null){
+                initThreads(socket);
+                setTitle("Connection good!");
+            }else{
+                setTitle("Connection failed");
+            }
         }
     };
+
+    private Socket connectToServer(String serverAddress, String portNumber){
+        Socket socket = null;
+        try{
+            socket = new Socket(serverAddress, Integer.parseInt(portNumber));
+        } catch (IOException e){
+        }
+        return socket;
+    }
 
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
