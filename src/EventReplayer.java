@@ -17,6 +17,7 @@ public class EventReplayer implements Runnable {
     public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area) {
         this.incomingQueue = incomingQueue;
         this.area = area;
+
     }
 
     public void run() {
@@ -48,14 +49,11 @@ public class EventReplayer implements Runnable {
                  */
                         }
                     });
-                } else if (mte instanceof ShutDownTextEvent){
-                    break;
                 }
             } catch (Exception _) {
                 wasInterrupted = true;
             }
         }
-        System.out.println("I'm the thread running the EventReplayer, now I die!");
     }
 
 }

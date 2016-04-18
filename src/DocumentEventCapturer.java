@@ -1,6 +1,7 @@
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -12,6 +13,20 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author Jesper Buus Nielsen
  */
 public class DocumentEventCapturer extends DocumentFilter {
+
+    //experimental
+    /*
+    private LinkedList<LinkedBlockingQueue<MyTextEvent>> senders = new LinkedList<>();
+
+    public int insertQueue(LinkedBlockingQueue<MyTextEvent> queue){
+        senders.push(queue);
+        return senders.size() - 1;
+    }
+
+    public void removeQueue(int index){
+        senders.remove(index);
+    }
+    */
 
     /*
      * We are using a blocking queue for two reasons: 
@@ -38,9 +53,6 @@ public class DocumentEventCapturer extends DocumentFilter {
         eventHistory.put(textEvent);
     }
 
-    public void clear() throws InterruptedException {
-        eventHistory.clear();
-    }
 
 
     public void insertString(FilterBypass fb, int offset,

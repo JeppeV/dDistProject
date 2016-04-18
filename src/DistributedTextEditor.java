@@ -97,10 +97,14 @@ public class DistributedTextEditor extends JFrame {
 
     }
 
-    private void initThreads(Socket socket, boolean isServer){
-        if(isServer){
+    private void initThreads(Socket socket){
+        if(socket == null){
+            //this is the server
             ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
+            Thread connectionManagerThread = new Thread(connectionManager);
+            connectionManagerThread.start();
         }else{
+            //this is a client
             TextEventSender sender = new TextEventSender(dec, socket);
             TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
             Thread senderThread = new Thread(sender);
@@ -126,16 +130,12 @@ public class DistributedTextEditor extends JFrame {
 
             String address = getLocalHostAddress();
             serverSocket = registerOnPort(PORT_NUMBER);
-            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER + " - editor is inactive while awaiting connection");
+            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
             isServer = true;
-            Socket socket = waitForConnectionFromClient(serverSocket);
-            if(socket != null){
-                initThreads(socket, true);
-                System.out.println("I'm server");
-                setTitle("Connection established to: "  + socket);
-            }else{
-                setTitle("Connection failed");
-            }
+
+            initThreads(null);
+            System.out.println("I'm server");
+
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
@@ -190,7 +190,7 @@ public class DistributedTextEditor extends JFrame {
             setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
             if(socket != null){
-                initThreads(socket, false);
+                initThreads(socket);
                 System.out.println("I'm client");
                 setTitle("Connection good!");
             }else{

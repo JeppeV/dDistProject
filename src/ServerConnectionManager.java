@@ -22,10 +22,15 @@ public class ServerConnectionManager implements Runnable {
 
     @Override
     public void run() {
+        Socket socket;
         while(true){
-            Socket socket = waitForConnectionFromClient(serverSocket);
+            socket = waitForConnectionFromClient(serverSocket);
             if(socket != null){
+                System.out.println("New connection established to client " + socket);
                 initThreads(socket);
+            }else{
+                System.out.println("Connection manager terminated");
+                break;
             }
         }
     }

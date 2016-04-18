@@ -24,7 +24,7 @@ public class TextEventReceiver implements Runnable {
     public void run() {
         MyTextEvent textEvent;
         boolean shutdown;
-        ObjectInputStream objectInputStream = null;
+        ObjectInputStream objectInputStream;
         try{
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             while(true){
@@ -34,11 +34,9 @@ public class TextEventReceiver implements Runnable {
                     shutdown = e.getShutdown();
                     if(!shutdown){
                         e.setShutdown(true);
-                        //initiate termination of sender thread
+                        //initiate termination of corresponding sender thread
                         documentEventCapturer.put(textEvent);
                     }
-                    //initiate termination of event replayer thread
-                    incomingEvents.put(textEvent);
                     break;
                 }else{
                     incomingEvents.put(textEvent);
@@ -51,11 +49,11 @@ public class TextEventReceiver implements Runnable {
             System.out.println("Receiver terminated");
 
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO
         }
 
     }

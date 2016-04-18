@@ -30,7 +30,7 @@ public class TextEventSender implements Runnable {
                 }
             }
             if(shutdown){
-                socket.close();
+                objectOutputStream.close();
             }
 
             System.out.println("Sender terminated");
