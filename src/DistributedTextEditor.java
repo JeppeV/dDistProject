@@ -12,17 +12,19 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
 
     private static final int PORT_NUMBER = 40103;
     private JTextArea area1 = new JTextArea(20, 120);
     private JTextArea area2 = new JTextArea(20, 120);
-    private JTextField ipaddress = new JTextField("10.192.82.78");
+    private JTextField ipaddress = new JTextField("10.192.84.209");
     private JTextField portNumber = new JTextField("40103");
 
     private boolean isServer;
     private ServerSocket serverSocket;
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -86,18 +88,27 @@ public class DistributedTextEditor extends JFrame {
         setTitle("Disconnected");
         setVisible(true);
 
+        incomingEvents = new LinkedBlockingQueue<>();
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area2);
+        Thread ert = new Thread(eventReplayer);
+        ert.start();
+
+
+
     }
 
-    private void initThreads(Socket socket){
-        TextEventSender sender = new TextEventSender(dec, socket);
-        TextEventReceiver receiver = new TextEventReceiver(dec, socket);
-        EventReplayer eventReplayer = new EventReplayer(receiver, area2);
-        Thread senderThread = new Thread(sender);
-        Thread receiverThread = new Thread(receiver);
-        Thread eventReplayerThread = new Thread(eventReplayer);
-        senderThread.start();
-        receiverThread.start();
-        eventReplayerThread.start();
+    private void initThreads(Socket socket, boolean isServer){
+        if(isServer){
+            ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
+        }else{
+            TextEventSender sender = new TextEventSender(dec, socket);
+            TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
+            Thread senderThread = new Thread(sender);
+            Thread receiverThread = new Thread(receiver);
+            senderThread.start();
+            receiverThread.start();
+        }
+
     }
 
     private KeyListener k1 = new KeyAdapter() {
@@ -119,7 +130,8 @@ public class DistributedTextEditor extends JFrame {
             isServer = true;
             Socket socket = waitForConnectionFromClient(serverSocket);
             if(socket != null){
-                initThreads(socket);
+                initThreads(socket, true);
+                System.out.println("I'm server");
                 setTitle("Connection established to: "  + socket);
             }else{
                 setTitle("Connection failed");
@@ -178,7 +190,8 @@ public class DistributedTextEditor extends JFrame {
             setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
             if(socket != null){
-                initThreads(socket);
+                initThreads(socket, false);
+                System.out.println("I'm client");
                 setTitle("Connection good!");
             }else{
                 setTitle("Connection failed");

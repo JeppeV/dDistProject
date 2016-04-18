@@ -11,23 +11,22 @@ public class TextEventReceiver implements Runnable {
 
     private DocumentEventCapturer documentEventCapturer;
     private Socket socket;
-    private LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public TextEventReceiver(DocumentEventCapturer documentEventCapturer, Socket socket){
-        this.documentEventCapturer = documentEventCapturer;
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, DocumentEventCapturer documentEventCapturer){
         this.socket = socket;
-    }
+        this.incomingEvents = incomingEvents;
+        this.documentEventCapturer = documentEventCapturer;
 
-    public MyTextEvent take() throws InterruptedException {
-        return eventHistory.take();
     }
 
     @Override
     public void run() {
         MyTextEvent textEvent;
         boolean shutdown;
+        ObjectInputStream objectInputStream = null;
         try{
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
             while(true){
                 textEvent = (MyTextEvent) objectInputStream.readObject();
                 if(textEvent instanceof ShutDownTextEvent){
@@ -39,20 +38,20 @@ public class TextEventReceiver implements Runnable {
                         documentEventCapturer.put(textEvent);
                     }
                     //initiate termination of event replayer thread
-                    eventHistory.put(textEvent);
+                    incomingEvents.put(textEvent);
                     break;
                 }else{
-                    eventHistory.put(textEvent);
+                    incomingEvents.put(textEvent);
                 }
 
             }
             if(shutdown){
-                socket.close();
+                objectInputStream.close();
             }
             System.out.println("Receiver terminated");
 
         } catch (IOException e) {
-            e.printStackTrace(); //TODO
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {

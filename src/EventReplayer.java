@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Takes the event recorded by the DocumentEventCapturer and replays
@@ -10,11 +11,11 @@ import java.awt.*;
  */
 public class EventReplayer implements Runnable {
 
-    private TextEventReceiver receiver;
+    private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
 
-    public EventReplayer(TextEventReceiver receiver, JTextArea area) {
-        this.receiver = receiver;
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area) {
+        this.incomingQueue = incomingQueue;
         this.area = area;
     }
 
@@ -22,7 +23,7 @@ public class EventReplayer implements Runnable {
         boolean wasInterrupted = false;
         while (!wasInterrupted) {
             try {
-                MyTextEvent mte = receiver.take();
+                MyTextEvent mte = incomingQueue.take();
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     EventQueue.invokeLater(() -> {
