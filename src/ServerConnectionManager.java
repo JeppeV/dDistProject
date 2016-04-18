@@ -1,4 +1,3 @@
-import javax.print.Doc;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -6,6 +5,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Jeppe Vinberg on 15-04-2016.
+ * <p>
+ * For a peer acting as server, the resposibility of the ServerConnectionManager is to await
+ * incoming connections from clients, and delegate a TextEventSender and TextEventCapturer to handle communication with
+ * this socket. Instances of TextEventCapturer share a reference to a LinkedBlockingQueue, which allows the EventReplayer
+ * to replay text events from several clients.
  */
 public class ServerConnectionManager implements Runnable {
 
@@ -13,7 +17,7 @@ public class ServerConnectionManager implements Runnable {
     private DocumentEventCapturer documentEventCapturer;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer, LinkedBlockingQueue<MyTextEvent> incomingEvents){
+    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer, LinkedBlockingQueue<MyTextEvent> incomingEvents) {
         this.serverSocket = serverSocket;
         this.documentEventCapturer = documentEventCapturer;
         this.incomingEvents = incomingEvents;
@@ -23,19 +27,19 @@ public class ServerConnectionManager implements Runnable {
     @Override
     public void run() {
         Socket socket;
-        while(true){
+        while (true) {
             socket = waitForConnectionFromClient(serverSocket);
-            if(socket != null){
+            if (socket != null) {
                 System.out.println("New connection established to client " + socket);
                 initThreads(socket);
-            }else{
+            } else {
                 System.out.println("Connection manager terminated");
                 break;
             }
         }
     }
 
-    private void initThreads(Socket socket){
+    private void initThreads(Socket socket) {
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, documentEventCapturer);
         TextEventSender sender = new TextEventSender(documentEventCapturer, socket);
         Thread senderThread = new Thread(sender);

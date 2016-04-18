@@ -98,12 +98,11 @@ public class DistributedTextEditor extends JFrame {
         incomingEvents = new LinkedBlockingQueue<>();
         /*
             The EventReplayer runnable keeps running while the peer lives.
-            I will only terminate once the program exits.
+            It will only terminate once the program exits.
          */
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, area2);
         Thread ert = new Thread(eventReplayer);
         ert.start();
-
 
 
     }
@@ -112,16 +111,18 @@ public class DistributedTextEditor extends JFrame {
      * Initates the appropriate threads for this peer.
      * Server: Initiate the ServerConnectionManager thread in order to handle incoming connections from client peers
      * Client: Initate the TextEventSender and TextEventReceiver in order to handle incoming and outgoing text events
+     *
      * @param socket the client socket for this end of the connection, should be null if this peer is server
      */
-    private void initThreads(Socket socket){
+    private void initThreads(Socket socket) {
+        //clear the document event capturer queue
         dec.clear();
-        if(socket == null){
+        if (socket == null) {
             //this is the server
             ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
             Thread connectionManagerThread = new Thread(connectionManager);
             connectionManagerThread.start();
-        }else{
+        } else {
             //this is a client
             TextEventSender sender = new TextEventSender(dec, socket);
             TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
@@ -153,7 +154,7 @@ public class DistributedTextEditor extends JFrame {
 
             String address = getLocalHostAddress();
             serverSocket = registerOnPort(PORT_NUMBER);
-            if(serverSocket != null){
+            if (serverSocket != null) {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
                 isServer = true;
                 initThreads(null);
@@ -166,7 +167,7 @@ public class DistributedTextEditor extends JFrame {
                 changed = false;
                 Save.setEnabled(false);
                 SaveAs.setEnabled(false);
-            }else{
+            } else {
                 setTitle("Failed to begin listening");
             }
 
@@ -186,7 +187,7 @@ public class DistributedTextEditor extends JFrame {
         return serverSocket;
     }
 
-    private String getLocalHostAddress(){
+    private String getLocalHostAddress() {
         String address = null;
         try {
             InetAddress localHost = InetAddress.getLocalHost();
@@ -215,24 +216,24 @@ public class DistributedTextEditor extends JFrame {
             // Connecting to the server
             setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
-            if(socket != null){
+            if (socket != null) {
                 initThreads(socket);
                 System.out.println("I'm client");
                 setTitle("Connection good!");
                 Listen.setEnabled(false);
                 Connect.setEnabled(false);
                 Disconnect.setEnabled(true);
-            }else{
+            } else {
                 setTitle("Connection failed");
             }
         }
     };
 
-    private Socket connectToServer(String serverAddress, String portNumber){
+    private Socket connectToServer(String serverAddress, String portNumber) {
         Socket socket = null;
-        try{
+        try {
             socket = new Socket(serverAddress, Integer.parseInt(portNumber));
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             // TODO
         }
@@ -248,12 +249,12 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             setTitle("Disconnected");
             try {
-                if(isServer){
+                if (isServer) {
                     deregisterOnPort();
                     isServer = false;
                 }
                 dec.put(new ShutDownTextEvent(false));
-            } catch (InterruptedException ie){
+            } catch (InterruptedException ie) {
                 //TODO
             }
 

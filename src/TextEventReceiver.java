@@ -5,6 +5,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by frederik290 on 15/04/16.
+ * <p>
+ * The resposibility of the TextEventReceiver is to await incoming objects from the related socket.
+ * These text event objects are then put onto a shared LinkedBlockingQueue.
+ * It is then the EventReplayer's resposibility to take the text events off the queue and replay them in text area 2.
  */
 
 public class TextEventReceiver implements Runnable {
@@ -13,7 +17,7 @@ public class TextEventReceiver implements Runnable {
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, DocumentEventCapturer documentEventCapturer){
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, DocumentEventCapturer documentEventCapturer) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.documentEventCapturer = documentEventCapturer;
@@ -25,25 +29,25 @@ public class TextEventReceiver implements Runnable {
         MyTextEvent textEvent;
         boolean shutdown;
         ObjectInputStream objectInputStream;
-        try{
+        try {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
-            while(true){
+            while (true) {
                 textEvent = (MyTextEvent) objectInputStream.readObject();
-                if(textEvent instanceof ShutDownTextEvent){
+                if (textEvent instanceof ShutDownTextEvent) {
                     ShutDownTextEvent e = (ShutDownTextEvent) textEvent;
                     shutdown = e.getShutdown();
-                    if(!shutdown){
+                    if (!shutdown) {
                         e.setShutdown(true);
                         //initiate termination of corresponding sender thread
                         documentEventCapturer.put(textEvent);
                     }
                     break;
-                }else{
+                } else {
                     incomingEvents.put(textEvent);
                 }
 
             }
-            if(shutdown){
+            if (shutdown) {
                 objectInputStream.close();
             }
             System.out.println("Receiver terminated");
