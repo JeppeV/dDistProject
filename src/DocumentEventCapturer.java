@@ -49,6 +49,10 @@ public class DocumentEventCapturer extends DocumentFilter {
         return eventHistory.take();
     }
 
+    public void clear() {
+        eventHistory.clear();
+    }
+
     public void put(MyTextEvent textEvent) throws InterruptedException {
         eventHistory.put(textEvent);
     }
