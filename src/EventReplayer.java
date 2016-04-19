@@ -50,7 +50,7 @@ public class EventReplayer implements Runnable {
                         }
                     });
                 }
-            } catch (Exception _) {
+            } catch (Exception e) {
                 wasInterrupted = true;
             }
         }

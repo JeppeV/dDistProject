@@ -17,7 +17,8 @@ public class ServerConnectionManager implements Runnable {
     private DocumentEventCapturer documentEventCapturer;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer, LinkedBlockingQueue<MyTextEvent> incomingEvents) {
+    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer,
+                                   LinkedBlockingQueue<MyTextEvent> incomingEvents) {
         this.serverSocket = serverSocket;
         this.documentEventCapturer = documentEventCapturer;
         this.incomingEvents = incomingEvents;
