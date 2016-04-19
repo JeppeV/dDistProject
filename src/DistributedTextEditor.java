@@ -19,8 +19,8 @@ public class DistributedTextEditor extends JFrame {
     private static final int PORT_NUMBER = 40103;
     private JTextArea area1 = new JTextArea(20, 120);
     private JTextArea area2 = new JTextArea(20, 120);
-    private JTextField ipaddress = new JTextField("10.192.84.209");
-    private JTextField portNumber = new JTextField("40103");
+    private JTextField ipaddress = new JTextField("Insert IP address here");
+    private JTextField portNumber = new JTextField("Insert port number here");
 
     private boolean isServer;
     private ServerSocket serverSocket;
@@ -261,8 +261,6 @@ public class DistributedTextEditor extends JFrame {
             Listen.setEnabled(true);
             Connect.setEnabled(true);
             Disconnect.setEnabled(false);
-
-
         }
     };
 

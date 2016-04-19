@@ -32,7 +32,7 @@ public class ServerConnectionManager implements Runnable {
             socket = waitForConnectionFromClient(serverSocket);
             if (socket != null) {
                 System.out.println("New connection established to client " + socket);
-                initThreads(socket);
+                initClientThreads(socket);
             } else {
                 System.out.println("Connection manager terminated");
                 break;
@@ -40,7 +40,7 @@ public class ServerConnectionManager implements Runnable {
         }
     }
 
-    private void initThreads(Socket socket) {
+    private void initClientThreads(Socket socket) {
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, documentEventCapturer);
         TextEventSender sender = new TextEventSender(documentEventCapturer, socket);
         Thread senderThread = new Thread(sender);
