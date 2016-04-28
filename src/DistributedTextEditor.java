@@ -36,7 +36,6 @@ public class DistributedTextEditor extends JFrame {
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
-
         area2.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
         area2.setEditable(false);
@@ -106,32 +105,33 @@ public class DistributedTextEditor extends JFrame {
 
 
     }
-
+    
     /**
-     * Initates the appropriate threads for this peer.
-     * Server: Initiate the ServerConnectionManager thread in order to handle incoming connections from client peers
-     * Client: Initate the TextEventSender and TextEventReceiver in order to handle incoming and outgoing text events
-     *
-     * @param socket the client socket for this end of the connection, should be null if this peer is server
+     * This method is called if this peer is supposed to act as a server.
+     * Initates a ServerConnectionManager thread to handle incoming connections from clients
      */
-    private void initThreads(Socket socket) {
+    private void initServerThreads(){
         //clear the document event capturer queue
         dec.clear();
-        if (socket == null) {
-            //this is the server
-            ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
-            Thread connectionManagerThread = new Thread(connectionManager);
-            connectionManagerThread.start();
-        } else {
-            //this is a client
-            TextEventSender sender = new TextEventSender(dec, socket);
-            TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
-            Thread senderThread = new Thread(sender);
-            Thread receiverThread = new Thread(receiver);
-            senderThread.start();
-            receiverThread.start();
-        }
+        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
+        Thread connectionManagerThread = new Thread(connectionManager);
+        connectionManagerThread.start();
+    }
 
+    /**
+     * This method is called if this peer is supposed to act as a client.
+     * Initiates threads to handle sending and receiving text events to and from the server.
+     * @param socket the socket representing the connection to the server
+     */
+    private void initClientThreads(Socket socket){
+        //clear the document event capturer queue
+        dec.clear();
+        TextEventSender sender = new TextEventSender(dec, socket);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
+        Thread senderThread = new Thread(sender);
+        Thread receiverThread = new Thread(receiver);
+        senderThread.start();
+        receiverThread.start();
     }
 
     private KeyListener k1 = new KeyAdapter() {
@@ -157,7 +157,7 @@ public class DistributedTextEditor extends JFrame {
             if (serverSocket != null) {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
                 isServer = true;
-                initThreads(null);
+                initServerThreads();
                 System.out.println("I'm server");
                 //disable irrelevant actions in order to avoid unexpected behaviour
                 Listen.setEnabled(false);
@@ -217,7 +217,7 @@ public class DistributedTextEditor extends JFrame {
             setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
             if (socket != null) {
-                initThreads(socket);
+                initClientThreads(socket);
                 System.out.println("I'm client");
                 setTitle("Connection good!");
                 Listen.setEnabled(false);

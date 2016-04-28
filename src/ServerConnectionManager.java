@@ -41,8 +41,8 @@ public class ServerConnectionManager implements Runnable {
     }
 
     private void initClientThreads(Socket socket) {
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, documentEventCapturer);
         TextEventSender sender = new TextEventSender(documentEventCapturer, socket);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, documentEventCapturer);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
