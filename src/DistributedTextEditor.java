@@ -22,7 +22,6 @@ public class DistributedTextEditor extends JFrame {
     private JTextField ipaddress = new JTextField("Insert IP address here");
     private JTextField portNumber = new JTextField("Insert port number here");
 
-    private boolean isServer;
     private ServerSocket serverSocket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
@@ -31,12 +30,10 @@ public class DistributedTextEditor extends JFrame {
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private boolean connected = false;
     private DocumentEventCapturer dec = new DocumentEventCapturer();
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        area2.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
         area2.setEditable(false);
 
@@ -48,12 +45,6 @@ public class DistributedTextEditor extends JFrame {
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         content.add(scroll1, BorderLayout.CENTER);
-
-        JScrollPane scroll2 =
-                new JScrollPane(area2,
-                        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                        JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        content.add(scroll2, BorderLayout.CENTER);
 
         content.add(ipaddress, BorderLayout.CENTER);
         content.add(portNumber, BorderLayout.CENTER);
@@ -99,7 +90,7 @@ public class DistributedTextEditor extends JFrame {
             The EventReplayer runnable keeps running while the peer lives.
             It will only terminate once the program exits.
          */
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area2);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1);
         Thread ert = new Thread(eventReplayer);
         ert.start();
 
@@ -156,7 +147,6 @@ public class DistributedTextEditor extends JFrame {
             serverSocket = registerOnPort(PORT_NUMBER);
             if (serverSocket != null) {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
-                isServer = true;
                 initServerThreads();
                 System.out.println("I'm server");
                 //disable irrelevant actions in order to avoid unexpected behaviour
@@ -249,10 +239,7 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             setTitle("Disconnected");
             try {
-                if (isServer) {
-                    deregisterOnPort();
-                    isServer = false;
-                }
+                deregisterOnPort();
                 dec.put(new ShutDownTextEvent(false));
             } catch (InterruptedException ie) {
                 //TODO

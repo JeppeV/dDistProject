@@ -36,7 +36,7 @@ public class DocumentEventCapturer extends DocumentFilter {
      *    empty, then take() will wait until new elements arrive, which is what
      *    we want, as we then don't need to keep asking until there are new elements.
      */
-    protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<MyTextEvent>();
+    protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<>();
 
     /**
      * If the queue is empty, then the call will block until an element arrives.
