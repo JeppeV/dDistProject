@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by frederik290 on 15/04/16.
@@ -10,23 +11,36 @@ import java.net.Socket;
  * to the corresponding socket.
  */
 public class TextEventSender implements Runnable {
-    private DocumentEventCapturer documentEventCapturer;
     private Socket socket;
-    boolean shutdown;
+    private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
 
-    public TextEventSender(DocumentEventCapturer documentEventCapturer, Socket socket) {
-        this.documentEventCapturer = documentEventCapturer;
+    public TextEventSender(){
+
+    }
+
+    public TextEventSender(Socket socket) {
         this.socket = socket;
+        this.outgoingEvents = new LinkedBlockingQueue<>();
+    }
+
+    public TextEventSender(Socket socket, LinkedBlockingQueue<MyTextEvent> outgoingEvents){
+        this.socket = socket;
+        this.outgoingEvents = outgoingEvents;
+    }
+
+    public void put(MyTextEvent e) throws InterruptedException{
+        outgoingEvents.put(e);
     }
 
     @Override
     public void run() {
         MyTextEvent textEvent;
         ObjectOutputStream objectOutputStream;
+        boolean shutdown;
         try {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while (true) {
-                textEvent = documentEventCapturer.take();
+                textEvent = outgoingEvents.take();
                 objectOutputStream.writeObject(textEvent);
                 if (textEvent instanceof ShutDownTextEvent) {
                     shutdown = ((ShutDownTextEvent) textEvent).getShutdown();
