@@ -15,13 +15,16 @@ public class ServerConnectionManager implements Runnable {
 
     private ServerSocket serverSocket;
     private DocumentEventCapturer documentEventCapturer;
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
+    private LinkedBlockingQueue<MyTextEvent> events;
+    private ServerSenderManager serverSenderManager;
 
-    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer,
-                                   LinkedBlockingQueue<MyTextEvent> incomingEvents) {
+    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer) {
         this.serverSocket = serverSocket;
         this.documentEventCapturer = documentEventCapturer;
-        this.incomingEvents = incomingEvents;
+        this.events = new LinkedBlockingQueue<>();
+        this.serverSenderManager = new ServerSenderManager(events);
+        new Thread(serverSenderManager).start();
+
 
     }
 
@@ -41,12 +44,17 @@ public class ServerConnectionManager implements Runnable {
     }
 
     private void initClientThreads(Socket socket) {
-        TextEventSender sender = new TextEventSender(documentEventCapturer, socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, documentEventCapturer);
+        TextEventSender sender = new TextEventSender(socket);
+        TextEventReceiver receiver = new TextEventReceiver(socket, events, documentEventCapturer);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
+        try {
+            serverSenderManager.addSender(sender);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private Socket waitForConnectionFromClient(ServerSocket serverSocket) {

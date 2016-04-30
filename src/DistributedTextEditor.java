@@ -35,7 +35,6 @@ public class DistributedTextEditor extends JFrame {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
 
-
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
@@ -103,7 +102,7 @@ public class DistributedTextEditor extends JFrame {
     private void initServerThreads(){
         //clear the document event capturer queue
         dec.clear();
-        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, incomingEvents);
+        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
     }
@@ -116,7 +115,7 @@ public class DistributedTextEditor extends JFrame {
     private void initClientThreads(Socket socket){
         //clear the document event capturer queue
         dec.clear();
-        TextEventSender sender = new TextEventSender(dec, socket);
+        TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
@@ -148,6 +147,11 @@ public class DistributedTextEditor extends JFrame {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
                 initServerThreads();
                 System.out.println("I'm server");
+                Socket socket = connectToServer(address, ""+PORT_NUMBER);
+                if (socket != null) {
+                    initClientThreads(socket);
+                    System.out.println("I'm client");
+                }
                 //disable irrelevant actions in order to avoid unexpected behaviour
                 Listen.setEnabled(false);
                 Connect.setEnabled(false);
@@ -190,7 +194,7 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private String getIPAddress(){
-        return "10.192.25.180";
+        return "10.192.87.254";
         //return ipaddress.getText()
     }
 
