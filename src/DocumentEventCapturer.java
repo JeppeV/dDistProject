@@ -13,37 +13,14 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DocumentEventCapturer extends DocumentFilter {
 
-    //experimental
-    /*
-    private LinkedList<LinkedBlockingQueue<MyTextEvent>> senders = new LinkedList<>();
+    private boolean enabled;
+    private LinkedBlockingQueue<MyTextEvent> eventHistory;
 
-    public int insertQueue(LinkedBlockingQueue<MyTextEvent> queue){
-        senders.push(queue);
-        return senders.size() - 1;
+    public DocumentEventCapturer(){
+        this.enabled = true;
+        this.eventHistory = new LinkedBlockingQueue<>();
     }
 
-    public void removeQueue(int index){
-        senders.remove(index);
-    }
-    */
-
-    /*
-     * We are using a blocking queue for two reasons: 
-     * 1) They are thread safe, i.e., we can have two threads add and take elements 
-     *    at the same time without any race conditions, so we do not have to do  
-     *    explicit synchronization.
-     * 2) It gives us a member take() which is blocking, i.e., if the queue is
-     *    empty, then take() will wait until new elements arrive, which is what
-     *    we want, as we then don't need to keep asking until there are new elements.
-     */
-    protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<>();
-
-    /**
-     * If the queue is empty, then the call will block until an element arrives.
-     * If the thread gets interrupted while waiting, we throw InterruptedException.
-     *
-     * @return Head of the recorded event queue.
-     */
     MyTextEvent take() throws InterruptedException {
         return eventHistory.take();
     }
@@ -56,20 +33,32 @@ public class DocumentEventCapturer extends DocumentFilter {
         eventHistory.put(textEvent);
     }
 
+    public void enable(){
+        this.enabled = true;
+    }
+
+    public void disable(){
+        this.enabled = false;
+    }
+
 
     public void insertString(FilterBypass fb, int offset,
             String str, AttributeSet a)
             throws BadLocationException {
 
 	/* Queue a copy of the event and then modify the textarea */
-        eventHistory.add(new TextInsertEvent(offset, str));
+        if(enabled){
+            eventHistory.add(new TextInsertEvent(offset, str));
+        }
         super.insertString(fb, offset, str, a);
     }
 
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
     /* Queue a copy of the event and then modify the textarea */
-        eventHistory.add(new TextRemoveEvent(offset, length));
+        if(enabled){
+            eventHistory.add(new TextRemoveEvent(offset, length));
+        }
         super.remove(fb, offset, length);
     }
 
@@ -79,10 +68,12 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 	
 	/* Queue a copy of the event and then modify the text */
-        if (length > 0) {
-            eventHistory.add(new TextRemoveEvent(offset, length));
+        if(enabled){
+            if (length > 0) {
+                eventHistory.add(new TextRemoveEvent(offset, length));
+            }
+            eventHistory.add(new TextInsertEvent(offset, str));
         }
-        eventHistory.add(new TextInsertEvent(offset, str));
         super.replace(fb, offset, length, str, a);
     }
 }

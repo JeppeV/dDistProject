@@ -13,10 +13,12 @@ public class EventReplayer implements Runnable {
 
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
+    private DocumentEventCapturer dec;
 
-    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area) {
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec) {
         this.incomingQueue = incomingQueue;
         this.area = area;
+        this.dec = dec;
 
     }
 
@@ -29,7 +31,9 @@ public class EventReplayer implements Runnable {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     EventQueue.invokeLater(() -> {
                         try {
+                            dec.disable();
                             area.insert(tie.getText(), tie.getOffset());
+                            dec.enable();
                         } catch (Exception e) {
                             System.err.println(e);
                 /* We catch all axceptions, as an uncaught exception would make the
@@ -41,7 +45,9 @@ public class EventReplayer implements Runnable {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
                     EventQueue.invokeLater(() -> {
                         try {
+                            dec.disable();
                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                            dec.enable();
                         } catch (Exception e) {
                             System.err.println(e);
                 /* We catch all axceptions, as an uncaught exception would make the

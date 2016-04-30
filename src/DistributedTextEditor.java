@@ -18,7 +18,6 @@ public class DistributedTextEditor extends JFrame {
 
     private static final int PORT_NUMBER = 40103;
     private JTextArea area1 = new JTextArea(20, 120);
-    private JTextArea area2 = new JTextArea(20, 120);
     private JTextField ipaddress = new JTextField("Insert IP address here");
     private JTextField portNumber = new JTextField("Insert port number here");
 
@@ -35,7 +34,7 @@ public class DistributedTextEditor extends JFrame {
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
-        area2.setEditable(false);
+
 
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
@@ -90,7 +89,7 @@ public class DistributedTextEditor extends JFrame {
             The EventReplayer runnable keeps running while the peer lives.
             It will only terminate once the program exits.
          */
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec);
         Thread ert = new Thread(eventReplayer);
         ert.start();
 
@@ -190,6 +189,16 @@ public class DistributedTextEditor extends JFrame {
         return address;
     }
 
+    private String getIPAddress(){
+        return "10.192.25.180";
+        //return ipaddress.getText()
+    }
+
+    private String getPortNumber(){
+        return "40103";
+        //return portNumber.getText();
+    }
+
 
     /**
      * When the menu item "Connect" is clicked, the peer acts as a client and attempts to connect the the host
@@ -204,8 +213,8 @@ public class DistributedTextEditor extends JFrame {
             SaveAs.setEnabled(false);
 
             // Connecting to the server
-            setTitle("Attempting to connect to: " + ipaddress.getText() + ":" + portNumber.getText() + "...");
-            Socket socket = connectToServer(ipaddress.getText(), portNumber.getText());
+            setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
+            Socket socket = connectToServer(getIPAddress(), getPortNumber());
             if (socket != null) {
                 initClientThreads(socket);
                 System.out.println("I'm client");
