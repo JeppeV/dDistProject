@@ -32,6 +32,7 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
+                            System.out.println("replaying: " + tie.getText());
                             area.insert(tie.getText(), tie.getOffset());
                             dec.enable();
                         } catch (Exception e) {

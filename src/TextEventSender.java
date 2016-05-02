@@ -38,7 +38,6 @@ public class TextEventSender implements Runnable {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while (true) {
                 textEvent = queue.take();
-                System.out.println("Event: " + ((TextInsertEvent) textEvent).getText() );
                 objectOutputStream.writeObject(textEvent);
                 if (textEvent instanceof ShutDownTextEvent) {
                     shutdown = ((ShutDownTextEvent) textEvent).getShutdown();

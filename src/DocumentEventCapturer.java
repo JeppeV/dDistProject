@@ -60,7 +60,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             eventHistory.add(event);
 
         }else{
-            System.out.println("received: " + str);
+            System.out.println("received: " + offset);
             super.insertString(fb, offset, str, a);
         }
 
@@ -75,6 +75,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             eventHistory.add(event);
         }else{
             super.remove(fb, offset, length);
+            System.out.println("received: " + offset);
         }
 
     }
@@ -97,6 +98,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             eventHistory.add(event);
         }else{
             super.replace(fb, offset, length, str, a);
+            System.out.println("received: " + offset);
         }
 
     }
