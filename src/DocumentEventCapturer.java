@@ -58,15 +58,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
-
         }else{
-            System.out.println("received: " + str);
-            try{
-                Thread.sleep(100);
-            }catch (InterruptedException e){
-                
-            }
-
             super.insertString(fb, offset, str, a);
         }
 
