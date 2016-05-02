@@ -75,10 +75,10 @@ public class TextEventReceiver implements Runnable {
         if(timestamp == expectedTimestamp){
             incomingEvents.put(event);
             expectedTimestamp++;
-            //
+
             if(!outstandingEvents.isEmpty()){
                 MyTextEvent e;
-                while((e = checkForOutstandingEvent()) != null){
+                while((e = getNextOutstandingEvent()) != null){
                     incomingEvents.put(e);
                     expectedTimestamp++;
                 }
@@ -89,11 +89,19 @@ public class TextEventReceiver implements Runnable {
 
     }
 
-    private MyTextEvent checkForOutstandingEvent(){
-        for(MyTextEvent event : outstandingEvents){
+    private MyTextEvent getNextOutstandingEvent(){
+        MyTextEvent event = null;
+        int index = -1;
+        for(int i = 0; i < outstandingEvents.size(); i++){
+            event = outstandingEvents.get(i);
             if(event.getTimestamp() == expectedTimestamp) {
-                return event;
+                index = i;
+                break;
             }
+        }
+        if(index > -1){
+            outstandingEvents.remove(index);
+            return event;
         }
         return null;
     }

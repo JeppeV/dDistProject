@@ -57,6 +57,7 @@ public class DocumentEventCapturer extends DocumentFilter {
         if(enabled){
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
+
             eventHistory.add(event);
 
         }else{
@@ -102,6 +103,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     private void setTimestamp(MyTextEvent event){
         event.setTimestamp(currentTimestamp++);
-        System.out.println("Just timestamped a textevent: " + (currentTimestamp - 1));
+        //System.out.println("Just timestamped a textevent: " + (currentTimestamp - 1));
     }
 }
