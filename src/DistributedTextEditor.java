@@ -194,7 +194,7 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private String getIPAddress(){
-        return "10.192.87.254";
+        return "10.192.25.180";
         //return ipaddress.getText()
     }
 

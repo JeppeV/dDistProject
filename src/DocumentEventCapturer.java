@@ -3,6 +3,7 @@ import sun.awt.image.ImageWatched;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import java.awt.event.TextEvent;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -16,11 +17,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
+    private int currentTimestamp;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
 
     public DocumentEventCapturer(){
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
+        this.currentTimestamp = 0;
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory(){
@@ -44,13 +47,18 @@ public class DocumentEventCapturer extends DocumentFilter {
     }
 
 
+
+
     public void insertString(FilterBypass fb, int offset,
             String str, AttributeSet a)
             throws BadLocationException {
 
 	/* Queue a copy of the event and then modify the textarea */
         if(enabled){
-            eventHistory.add(new TextInsertEvent(offset, str));
+            TextInsertEvent event = new TextInsertEvent(offset, str);
+            setTimestamp(event);
+            eventHistory.add(event);
+
         }else{
             super.insertString(fb, offset, str, a);
         }
@@ -61,7 +69,9 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
     /* Queue a copy of the event and then modify the textarea */
         if(enabled){
-            eventHistory.add(new TextRemoveEvent(offset, length));
+            TextRemoveEvent event = new TextRemoveEvent(offset, length);
+            setTimestamp(event);
+            eventHistory.add(event);
         }else{
             super.remove(fb, offset, length);
         }
@@ -74,14 +84,24 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 	
 	/* Queue a copy of the event and then modify the text */
+        MyTextEvent event;
         if(enabled){
             if (length > 0) {
-                eventHistory.add(new TextRemoveEvent(offset, length));
+                event = new TextRemoveEvent(offset, length);
+                setTimestamp(event);
+                eventHistory.add(event);
             }
-            eventHistory.add(new TextInsertEvent(offset, str));
+            event = new TextInsertEvent(offset, str);
+            setTimestamp(event);
+            eventHistory.add(event);
         }else{
             super.replace(fb, offset, length, str, a);
         }
 
+    }
+
+    private void setTimestamp(MyTextEvent event){
+        event.setTimestamp(currentTimestamp++);
+        System.out.println("Just timestamped a textevent: " + (currentTimestamp - 1));
     }
 }

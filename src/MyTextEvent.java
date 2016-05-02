@@ -4,13 +4,22 @@ import java.io.Serializable;
  * @author Jesper Buus Nielsen
  */
 public class MyTextEvent implements Serializable {
-    MyTextEvent(int offset) {
+    private int offset;
+    private int timestamp;
+
+    protected MyTextEvent(int offset) {
         this.offset = offset;
     }
 
-    private int offset;
-
-    int getOffset() {
+    public int getOffset() {
         return offset;
+    }
+
+    public int getTimestamp(){
+        return this.timestamp;
+    }
+
+    public void setTimestamp(int timestamp){
+         this.timestamp = timestamp;
     }
 }
