@@ -97,7 +97,6 @@ public class DistributedTextEditor extends JFrame {
     
     /**
      * This method is called if this peer is supposed to act as a server.
-     * Initates a ServerConnectionManager thread to handle incoming connections from clients
      */
     private void initServerThreads(){
         //clear the document event capturer queue

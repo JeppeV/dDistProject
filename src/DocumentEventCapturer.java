@@ -57,10 +57,10 @@ public class DocumentEventCapturer extends DocumentFilter {
         if(enabled){
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
-
             eventHistory.add(event);
 
         }else{
+            System.out.println("received: " + str);
             super.insertString(fb, offset, str, a);
         }
 
@@ -87,6 +87,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if(enabled){
+            System.out.println("replaceEvent: " + str);
             if (length > 0) {
                 event = new TextRemoveEvent(offset, length);
                 setTimestamp(event);
