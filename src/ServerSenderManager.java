@@ -8,10 +8,12 @@ public class ServerSenderManager implements Runnable {
 
     private LinkedBlockingQueue<MyTextEvent> events;
     private LinkedBlockingQueue<TextEventSender> senders;
+    private int timestamp;
 
     public ServerSenderManager(LinkedBlockingQueue<MyTextEvent> events){
         this.events = events;
         this.senders = new LinkedBlockingQueue<>();
+        this.timestamp = 0;
     }
 
     @Override
@@ -20,6 +22,7 @@ public class ServerSenderManager implements Runnable {
         try{
             while(true){
                 event = events.take();
+                event.setTimestamp(timestamp);
                 for(TextEventSender sender : senders){
                     sender.put(event);
                 }
