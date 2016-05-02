@@ -60,7 +60,11 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
-            super.insertString(fb, offset, str, a);
+            try{
+                incomingEvents.put(event);
+            }catch (InterruptedException e){
+
+            }
         }else{
             super.insertString(fb, offset, str, a);
         }
@@ -74,7 +78,11 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextRemoveEvent event = new TextRemoveEvent(offset, length);
             setTimestamp(event);
             eventHistory.add(event);
-            super.remove(fb, offset, length);
+            try{
+                incomingEvents.put(event);
+            }catch (InterruptedException e){
+
+            }
         }else{
             super.remove(fb, offset, length);
         }
@@ -97,7 +105,11 @@ public class DocumentEventCapturer extends DocumentFilter {
             event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
-            super.replace(fb, offset, length, str, a);
+            try{
+                incomingEvents.put(event);
+            }catch (InterruptedException e){
+
+            }
         }else{
             super.replace(fb, offset, length, str, a);
         }
