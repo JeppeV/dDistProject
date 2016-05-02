@@ -32,8 +32,7 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            area.replaceRange(null, tie.getOffset(), tie.getOffset() + tie.getText().length()-1);
-                            area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length()-1);
+                            area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length());
                             //area.insert(tie.getText(), tie.getOffset());
                             dec.enable();
                         } catch (Exception e) {
