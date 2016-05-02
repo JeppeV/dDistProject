@@ -19,11 +19,13 @@ public class DocumentEventCapturer extends DocumentFilter {
     private boolean enabled;
     private int currentTimestamp;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public DocumentEventCapturer(){
+    public DocumentEventCapturer(LinkedBlockingQueue<MyTextEvent> incomingEvents){
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.currentTimestamp = 0;
+        this.incomingEvents = incomingEvents;
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory(){
@@ -58,8 +60,8 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
+            super.insertString(fb, offset, str, a);
         }else{
-            System.out.println("received: " + offset);
             super.insertString(fb, offset, str, a);
         }
 

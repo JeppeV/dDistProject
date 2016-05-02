@@ -22,14 +22,14 @@ public class DistributedTextEditor extends JFrame {
     private JTextField portNumber = new JTextField("Insert port number here");
 
     private ServerSocket serverSocket;
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents = new LinkedBlockingQueue<>();
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private DocumentEventCapturer dec = new DocumentEventCapturer();
+    private DocumentEventCapturer dec = new DocumentEventCapturer(incomingEvents);
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -83,7 +83,7 @@ public class DistributedTextEditor extends JFrame {
             Each TextEventReceiver then puts incoming text events onto the queue,
             and the EventReplayer takes elements from this list and replays them in the second text area.
          */
-        incomingEvents = new LinkedBlockingQueue<>();
+
         /*
             The EventReplayer runnable keeps running while the peer lives.
             It will only terminate once the program exits.

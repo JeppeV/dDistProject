@@ -32,11 +32,12 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            System.out.println("replaying: " + tie.getText());
-                            area.insert(tie.getText(), tie.getOffset());
+                            area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length()-1);
+                            //area.insert(tie.getText(), tie.getOffset());
                             dec.enable();
                         } catch (Exception e) {
                             System.err.println(e);
+                            e.printStackTrace();
                 /* We catch all axceptions, as an uncaught exception would make the
                  * EDT unwind, which is now healthy.
                  */
