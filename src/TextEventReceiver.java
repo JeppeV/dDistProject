@@ -1,6 +1,8 @@
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -16,11 +18,15 @@ public class TextEventReceiver implements Runnable {
     private DocumentEventCapturer documentEventCapturer;
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
+    private LinkedList<MyTextEvent> outstandingEvents;
+    private int expectedTimestamp;
 
     public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, DocumentEventCapturer documentEventCapturer) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.documentEventCapturer = documentEventCapturer;
+        this.outstandingEvents = new LinkedList<>();
+        this.expectedTimestamp = 0;
 
     }
 
@@ -29,6 +35,7 @@ public class TextEventReceiver implements Runnable {
         MyTextEvent textEvent;
         boolean shutdown;
         ObjectInputStream objectInputStream;
+
         try {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             while (true) {
@@ -43,7 +50,7 @@ public class TextEventReceiver implements Runnable {
                     }
                     break;
                 } else {
-                    incomingEvents.put(textEvent);
+                    processEvent(textEvent);
                 }
 
             }
@@ -60,5 +67,34 @@ public class TextEventReceiver implements Runnable {
             e.printStackTrace(); //TODO
         }
 
+    }
+
+    private void processEvent(MyTextEvent event) throws InterruptedException{
+        int timestamp = event.getTimestamp();
+
+        if(timestamp == expectedTimestamp){
+            incomingEvents.put(event);
+            expectedTimestamp++;
+            //
+            if(!outstandingEvents.isEmpty()){
+                MyTextEvent e;
+                while((e = checkForOutstandingEvent()) != null){
+                    incomingEvents.put(e);
+                    expectedTimestamp++;
+                }
+            }
+        } else{
+            outstandingEvents.add(event);
+        }
+
+    }
+
+    private MyTextEvent checkForOutstandingEvent(){
+        for(MyTextEvent event : outstandingEvents){
+            if(event.getTimestamp() == expectedTimestamp) {
+                return event;
+            }
+        }
+        return null;
     }
 }
