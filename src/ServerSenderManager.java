@@ -1,4 +1,5 @@
 
+import javax.swing.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -32,7 +33,13 @@ public class ServerSenderManager implements Runnable {
         }
     }
 
-    public void addSender(TextEventSender sender) throws InterruptedException{
+    public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException{
+        //send all of text area to new client, with timestamp 0
+        TextInsertEvent init = new TextInsertEvent(0, area.getText());
+        init.setTimestamp(0);
+        sender.put(init);
+        //send an InitalTextEvent to update clients timestamp to the currently expected from the server
+        sender.put(new InitialTextEvent(timestamp));
         senders.put(sender);
     }
 

@@ -46,6 +46,10 @@ public class DocumentEventCapturer extends DocumentFilter {
         this.enabled = false;
     }
 
+    public void resetTimestamp(){
+        currentTimestamp = 0;
+    }
+
 
 
 

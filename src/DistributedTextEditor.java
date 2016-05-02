@@ -21,6 +21,7 @@ public class DistributedTextEditor extends JFrame {
     private JTextField ipaddress = new JTextField("Insert IP address here");
     private JTextField portNumber = new JTextField("Insert port number here");
 
+    private DisconnectHandler disconnectHandler;
     private ServerSocket serverSocket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
@@ -98,12 +99,13 @@ public class DistributedTextEditor extends JFrame {
     /**
      * This method is called if this peer is supposed to act as a server.
      */
-    private void initServerThreads(){
+    private DisconnectHandler initServerThreads(){
         //clear the document event capturer queue
         dec.clear();
-        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec);
+        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, area1);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
+        return connectionManager;
     }
 
     /**
@@ -111,15 +113,16 @@ public class DistributedTextEditor extends JFrame {
      * Initiates threads to handle sending and receiving text events to and from the server.
      * @param socket the socket representing the connection to the server
      */
-    private void initClientThreads(Socket socket){
+    private DisconnectHandler initClientThreads(Socket socket){
         //clear the document event capturer queue
         dec.clear();
         TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, dec);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
+        return sender;
     }
 
     private KeyListener k1 = new KeyAdapter() {
@@ -138,13 +141,14 @@ public class DistributedTextEditor extends JFrame {
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
-            area1.setText("");
+            clearTextArea();
+            dec.resetTimestamp();
 
             String address = getLocalHostAddress();
             serverSocket = registerOnPort(PORT_NUMBER);
             if (serverSocket != null) {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
-                initServerThreads();
+                disconnectHandler = initServerThreads();
                 System.out.println("I'm server");
                 Socket socket = connectToServer(address, ""+PORT_NUMBER);
                 if (socket != null) {
@@ -202,6 +206,12 @@ public class DistributedTextEditor extends JFrame {
         //return portNumber.getText();
     }
 
+    private void clearTextArea(){
+        dec.disable();
+        area1.setText("");
+        dec.enable();
+    }
+
 
     /**
      * When the menu item "Connect" is clicked, the peer acts as a client and attempts to connect the the host
@@ -210,7 +220,8 @@ public class DistributedTextEditor extends JFrame {
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
-            area1.setText("");
+            dec.resetTimestamp();
+            clearTextArea();
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
@@ -219,7 +230,7 @@ public class DistributedTextEditor extends JFrame {
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
             Socket socket = connectToServer(getIPAddress(), getPortNumber());
             if (socket != null) {
-                initClientThreads(socket);
+                disconnectHandler = initClientThreads(socket);
                 System.out.println("I'm client");
                 setTitle("Connection good!");
                 Listen.setEnabled(false);
@@ -251,8 +262,9 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             setTitle("Disconnected");
             try {
+                disconnectHandler.disconnect();
+                disconnectHandler = null;
                 deregisterOnPort();
-                dec.put(new ShutDownTextEvent(false));
             } catch (InterruptedException ie) {
                 //TODO
             }

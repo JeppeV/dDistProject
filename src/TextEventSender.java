@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * When a new object is caught by the DocumentEventCapturer, the TextEventSender takes the object off the queue and sends it
  * to the corresponding socket.
  */
-public class TextEventSender implements Runnable {
+public class TextEventSender implements Runnable, DisconnectHandler {
 
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> queue;
@@ -55,5 +55,10 @@ public class TextEventSender implements Runnable {
         } catch (InterruptedException e) {
             //TODO
         }
+    }
+
+    @Override
+    public void disconnect() throws InterruptedException {
+        queue.put(new ShutDownTextEvent(false));
     }
 }

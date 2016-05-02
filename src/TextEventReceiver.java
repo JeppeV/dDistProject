@@ -15,16 +15,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class TextEventReceiver implements Runnable {
 
-    private DocumentEventCapturer documentEventCapturer;
+    private TextEventSender sender;
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private LinkedList<MyTextEvent> outstandingEvents;
     private int expectedTimestamp;
 
-    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, DocumentEventCapturer documentEventCapturer) {
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
-        this.documentEventCapturer = documentEventCapturer;
+        this.sender = sender;
         this.outstandingEvents = new LinkedList<>();
         this.expectedTimestamp = 0;
 
@@ -43,13 +43,19 @@ public class TextEventReceiver implements Runnable {
                 if (textEvent instanceof ShutDownTextEvent) {
                     ShutDownTextEvent e = (ShutDownTextEvent) textEvent;
                     shutdown = e.getShutdown();
+                    System.out.println("Received shutdowntext event with: " + shutdown);
                     if (!shutdown) {
                         e.setShutdown(true);
                         //initiate termination of corresponding sender thread
-                        documentEventCapturer.put(textEvent);
+                        sender.put(e);
                     }
                     break;
-                } else {
+                } else if (textEvent instanceof InitialTextEvent) {
+                    expectedTimestamp = textEvent.getTimestamp();
+
+                }
+
+                else {
                     processEvent(textEvent);
                 }
 

@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,22 +12,25 @@ import java.util.concurrent.LinkedBlockingQueue;
  * this socket. Instances of TextEventCapturer share a reference to a LinkedBlockingQueue, which allows the EventReplayer
  * to replay text events from several clients.
  */
-public class ServerConnectionManager implements Runnable {
+public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     private ServerSocket serverSocket;
     private DocumentEventCapturer documentEventCapturer;
     private LinkedBlockingQueue<MyTextEvent> events;
     private ServerSenderManager serverSenderManager;
+    private JTextArea area;
 
-    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer) {
+    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer, JTextArea area) {
         this.serverSocket = serverSocket;
         this.documentEventCapturer = documentEventCapturer;
         this.events = new LinkedBlockingQueue<>();
+        this.area = area;
         this.serverSenderManager = new ServerSenderManager(events);
         new Thread(serverSenderManager).start();
 
 
     }
+
 
     @Override
     public void run() {
@@ -45,13 +49,13 @@ public class ServerConnectionManager implements Runnable {
 
     private void initClientThreads(Socket socket) {
         TextEventSender sender = new TextEventSender(socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket, events, documentEventCapturer);
+        TextEventReceiver receiver = new TextEventReceiver(socket, events, sender);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
         try {
-            serverSenderManager.addSender(sender);
+            serverSenderManager.addSender(sender, area);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -65,5 +69,10 @@ public class ServerConnectionManager implements Runnable {
             // We return null on IOExceptions
         }
         return res;
+    }
+
+    @Override
+    public void disconnect() throws InterruptedException {
+        events.put(new ShutDownTextEvent(false));
     }
 }
