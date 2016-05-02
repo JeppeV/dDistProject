@@ -19,13 +19,11 @@ public class DocumentEventCapturer extends DocumentFilter {
     private boolean enabled;
     private int currentTimestamp;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
 
-    public DocumentEventCapturer(LinkedBlockingQueue<MyTextEvent> incomingEvents){
+    public DocumentEventCapturer(){
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.currentTimestamp = 0;
-        this.incomingEvents = incomingEvents;
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory(){
@@ -60,7 +58,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextInsertEvent event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
-            super.insertString(fb, offset, str, a);
         }else{
             super.insertString(fb, offset, str, a);
         }
@@ -74,7 +71,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextRemoveEvent event = new TextRemoveEvent(offset, length);
             setTimestamp(event);
             eventHistory.add(event);
-            super.remove(fb, offset, length);
         }else{
             super.remove(fb, offset, length);
         }
@@ -97,7 +93,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
-            super.replace(fb, offset, length, str, a);
         }else{
             super.replace(fb, offset, length, str, a);
         }
