@@ -29,7 +29,7 @@ public class EventReplayer implements Runnable {
                 MyTextEvent mte = incomingQueue.take();
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
-                    EventQueue.invokeAndWait(() -> {
+                    EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
                             area.insert(tie.getText(), tie.getOffset());
@@ -43,7 +43,7 @@ public class EventReplayer implements Runnable {
                     });
                 } else if (mte instanceof TextRemoveEvent) {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
-                    EventQueue.invokeAndWait(() -> {
+                    EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());

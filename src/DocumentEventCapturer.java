@@ -87,7 +87,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if(enabled){
-            System.out.println("replaceEvent: " + str);
             if (length > 0) {
                 event = new TextRemoveEvent(offset, length);
                 setTimestamp(event);
@@ -104,6 +103,5 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     private void setTimestamp(MyTextEvent event){
         event.setTimestamp(currentTimestamp++);
-        //System.out.println("Just timestamped a textevent: " + (currentTimestamp - 1));
     }
 }
