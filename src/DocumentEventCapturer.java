@@ -61,12 +61,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
         }else{
             System.out.println("received: " + str);
-            try{
-                Thread.sleep(100);
-            }catch (InterruptedException e){
-                
-            }
-
             super.insertString(fb, offset, str, a);
         }
 
