@@ -74,9 +74,9 @@ public class DocumentEventCapturer extends DocumentFilter {
             TextRemoveEvent event = new TextRemoveEvent(offset, length);
             setTimestamp(event);
             eventHistory.add(event);
+            super.remove(fb, offset, length);
         }else{
             super.remove(fb, offset, length);
-            System.out.println("received: " + offset);
         }
 
     }
@@ -97,9 +97,9 @@ public class DocumentEventCapturer extends DocumentFilter {
             event = new TextInsertEvent(offset, str);
             setTimestamp(event);
             eventHistory.add(event);
+            super.replace(fb, offset, length, str, a);
         }else{
             super.replace(fb, offset, length, str, a);
-            System.out.println("received: " + offset);
         }
 
     }
