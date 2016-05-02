@@ -22,7 +22,7 @@ public class ServerSenderManager implements Runnable {
         try{
             while(true){
                 event = events.take();
-                event.setTimestamp(timestamp);
+                event.setTimestamp(timestamp++);
                 for(TextEventSender sender : senders){
                     sender.put(event);
                 }
