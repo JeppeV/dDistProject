@@ -32,18 +32,8 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            String s = area.getText(tie.getOffset(),tie.getText().length());
-                            s = s.trim();
-                            System.out.println("returned text is: " + s);
-                            if(!s.equals("")){
-                                System.out.println("replacing text");
-                                area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length());
-                            }else{
-                                System.out.println("inserting text");
-                                area.insert(tie.getText(), tie.getOffset());
-                            }
-
-
+                            System.out.println("Received insert event:\n" + tie.getText());
+                            area.insert(tie.getText(), tie.getOffset());
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();

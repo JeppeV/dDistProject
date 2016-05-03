@@ -1,5 +1,7 @@
+import javax.swing.*;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Caret;
 import javax.swing.text.DocumentFilter;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,10 +17,14 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
+    private JTextArea area;
+    private Caret caret;
 
-    public DocumentEventCapturer() {
+    public DocumentEventCapturer(JTextArea area) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
+        this.area = area;
+        this.caret = area.getCaret();
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
@@ -48,7 +54,8 @@ public class DocumentEventCapturer extends DocumentFilter {
 
 	/* Queue a copy of the event and then modify the textarea */
         if (enabled) {
-            super.insertString(fb, offset, str, a);
+            //test changing caret position
+            caret.setDot(caret.getDot() + str.length());
             TextInsertEvent event = new TextInsertEvent(offset, str);
             eventHistory.add(event);
 
@@ -62,7 +69,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
     /* Queue a copy of the event and then modify the textarea */
         if (enabled) {
-            super.remove(fb, offset, length);
+
             TextRemoveEvent event = new TextRemoveEvent(offset, length);
             eventHistory.add(event);
 
@@ -76,10 +83,9 @@ public class DocumentEventCapturer extends DocumentFilter {
             int length,
             String str, AttributeSet a)
             throws BadLocationException {
-	/* Queue a copy of the event and then modify the text */
+    /* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if (enabled) {
-            super.replace(fb, offset, length, str, a);
             if (length > 0) {
                 event = new TextRemoveEvent(offset, length);
                 eventHistory.add(event);
