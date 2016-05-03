@@ -32,10 +32,21 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            area.insert(tie.getText(), tie.getOffset());
+                            String s = area.getText(tie.getOffset(),tie.getText().length());
+                            s = s.trim();
+                            System.out.println("returned text is: " + s);
+                            if(!s.equals("")){
+                                System.out.println("replacing text");
+                                area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length());
+                            }else{
+                                System.out.println("inserting text");
+                                area.insert(tie.getText(), tie.getOffset());
+                            }
+
+
                             dec.enable();
                         } catch (Exception e) {
-                            System.err.println(e);
+                            e.printStackTrace();
                 /* We catch all axceptions, as an uncaught exception would make the
                  * EDT unwind, which is now healthy.
                  */
@@ -49,7 +60,7 @@ public class EventReplayer implements Runnable {
                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             dec.enable();
                         } catch (Exception e) {
-                            System.err.println(e);
+                            e.printStackTrace();
                 /* We catch all axceptions, as an uncaught exception would make the
                  * EDT unwind, which is now healthy.
                  */

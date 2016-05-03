@@ -15,15 +15,5 @@ public class MyTextEvent implements Serializable {
         return offset;
     }
 
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
 
-    public int getTimestamp(){
-        return this.timestamp;
-    }
-
-    public void setTimestamp(int timestamp){
-         this.timestamp = timestamp;
-    }
 }

@@ -16,7 +16,7 @@ public class TextEventSender implements Runnable, DisconnectHandler {
     private LinkedBlockingQueue<MyTextEvent> queue;
     boolean shutdown;
 
-    public TextEventSender(Socket socket){
+    public TextEventSender(Socket socket) {
         this.socket = socket;
         this.queue = new LinkedBlockingQueue<>();
     }
@@ -26,7 +26,7 @@ public class TextEventSender implements Runnable, DisconnectHandler {
         this.queue = queue;
     }
 
-    public void put(MyTextEvent e) throws InterruptedException{
+    public void put(MyTextEvent e) throws InterruptedException {
         queue.put(e);
     }
 

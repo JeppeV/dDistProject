@@ -95,11 +95,11 @@ public class DistributedTextEditor extends JFrame {
 
 
     }
-    
+
     /**
      * This method is called if this peer is supposed to act as a server.
      */
-    private DisconnectHandler initServerThreads(){
+    private DisconnectHandler initServerThreads() {
         //clear the document event capturer queue
         dec.clear();
         ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, area1);
@@ -111,9 +111,10 @@ public class DistributedTextEditor extends JFrame {
     /**
      * This method is called if this peer is supposed to act as a client.
      * Initiates threads to handle sending and receiving text events to and from the server.
+     *
      * @param socket the socket representing the connection to the server
      */
-    private DisconnectHandler initClientThreads(Socket socket){
+    private DisconnectHandler initClientThreads(Socket socket) {
         //clear the document event capturer queue
         dec.clear();
         TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
@@ -142,7 +143,6 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             clearTextArea();
-            dec.resetTimestamp();
 
             String address = getLocalHostAddress();
             serverSocket = registerOnPort(PORT_NUMBER);
@@ -150,7 +150,7 @@ public class DistributedTextEditor extends JFrame {
                 setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
                 disconnectHandler = initServerThreads();
                 System.out.println("I'm server");
-                Socket socket = connectToServer(address, ""+PORT_NUMBER);
+                Socket socket = connectToServer(address, "" + PORT_NUMBER);
                 if (socket != null) {
                     initClientThreads(socket);
                     System.out.println("I'm client");
@@ -196,16 +196,16 @@ public class DistributedTextEditor extends JFrame {
         return address;
     }
 
-    private String getIPAddress(){
+    private String getIPAddress() {
         return ipaddress.getText();
     }
 
-    private String getPortNumber(){
+    private String getPortNumber() {
         return "40103";
         //return portNumber.getText();
     }
 
-    private void clearTextArea(){
+    private void clearTextArea() {
         dec.disable();
         area1.setText("");
         dec.enable();
@@ -219,7 +219,6 @@ public class DistributedTextEditor extends JFrame {
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
-            dec.resetTimestamp();
             clearTextArea();
             changed = false;
             Save.setEnabled(false);

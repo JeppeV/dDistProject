@@ -1,9 +1,6 @@
-import sun.awt.image.ImageWatched;
-
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
-import java.awt.event.TextEvent;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -17,16 +14,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
-    private int currentTimestamp;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
 
-    public DocumentEventCapturer(){
+    public DocumentEventCapturer() {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
-        this.currentTimestamp = 0;
     }
 
-    public LinkedBlockingQueue<MyTextEvent> getEventHistory(){
+    public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
         return eventHistory;
     }
 
@@ -38,19 +33,13 @@ public class DocumentEventCapturer extends DocumentFilter {
         eventHistory.put(textEvent);
     }
 
-    public void enable(){
+    public void enable() {
         this.enabled = true;
     }
 
-    public void disable(){
+    public void disable() {
         this.enabled = false;
     }
-
-    public void resetTimestamp(){
-        currentTimestamp = 0;
-    }
-
-
 
 
     public void insertString(FilterBypass fb, int offset,
@@ -58,11 +47,12 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 
 	/* Queue a copy of the event and then modify the textarea */
-        if(enabled){
+        if (enabled) {
+            super.insertString(fb, offset, str, a);
             TextInsertEvent event = new TextInsertEvent(offset, str);
-            setTimestamp(event);
             eventHistory.add(event);
-        }else{
+
+        } else {
             super.insertString(fb, offset, str, a);
         }
 
@@ -71,11 +61,12 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
     /* Queue a copy of the event and then modify the textarea */
-        if(enabled){
+        if (enabled) {
+            super.remove(fb, offset, length);
             TextRemoveEvent event = new TextRemoveEvent(offset, length);
-            setTimestamp(event);
             eventHistory.add(event);
-        }else{
+
+        } else {
             super.remove(fb, offset, length);
         }
 
@@ -85,25 +76,21 @@ public class DocumentEventCapturer extends DocumentFilter {
             int length,
             String str, AttributeSet a)
             throws BadLocationException {
-	
 	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
-        if(enabled){
+        if (enabled) {
+            super.replace(fb, offset, length, str, a);
             if (length > 0) {
                 event = new TextRemoveEvent(offset, length);
-                setTimestamp(event);
                 eventHistory.add(event);
             }
             event = new TextInsertEvent(offset, str);
-            setTimestamp(event);
             eventHistory.add(event);
-        }else{
+
+        } else {
             super.replace(fb, offset, length, str, a);
         }
 
     }
 
-    private void setTimestamp(MyTextEvent event){
-        event.setTimestamp(currentTimestamp++);
-    }
 }
