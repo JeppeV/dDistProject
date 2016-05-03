@@ -30,7 +30,7 @@ public class DistributedTextEditor extends JFrame {
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private DocumentEventCapturer dec = new DocumentEventCapturer(area1);
+    private DocumentEventCapturer dec = new DocumentEventCapturer();
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));

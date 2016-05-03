@@ -32,14 +32,10 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            System.out.println("Received insert event:\n" + tie.getText());
                             area.insert(tie.getText(), tie.getOffset());
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
-                /* We catch all axceptions, as an uncaught exception would make the
-                 * EDT unwind, which is now healthy.
-                 */
                         }
                     });
                 } else if (mte instanceof TextRemoveEvent) {
@@ -51,9 +47,6 @@ public class EventReplayer implements Runnable {
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
-                /* We catch all axceptions, as an uncaught exception would make the
-                 * EDT unwind, which is now healthy.
-                 */
                         }
                     });
                 }
