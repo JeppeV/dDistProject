@@ -18,12 +18,14 @@ public class DocumentEventCapturer extends DocumentFilter {
     private boolean enabled;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
     private int localOffset;
-    private int lastOffset;
+    private int lastInsertStringLength, lastRemoveStringLength;
 
     public DocumentEventCapturer() {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.localOffset = -1;
+        this.lastInsertStringLength = 0;
+        this.lastRemoveStringLength = 0;
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
@@ -48,9 +50,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 
         if (enabled) {
-            if(localOffset < 0 || offset < localOffset) localOffset = offset;
             TextInsertEvent event = new TextInsertEvent(localOffset, str);
-            localOffset += str.length();
             eventHistory.add(event);
         } else {
             super.insertString(fb, offset, str, a);
@@ -62,9 +62,14 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
         if (enabled) {
-            localOffset = offset;
+            if(offset != (localOffset + lastRemoveStringLength)){
+                localOffset = offset;
+            }
             TextRemoveEvent event = new TextRemoveEvent(localOffset, length);
+            localOffset -= length;
+            lastRemoveStringLength = length;
             eventHistory.add(event);
+
             System.out.println("Removal called locally");
             System.out.println("Local offset is: " + localOffset);
         } else {
@@ -79,15 +84,21 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
         MyTextEvent event;
         if (enabled) {
-            if(localOffset != offset) localOffset = offset;
             if (length > 0) {
+                localOffset = offset;
                 event = new TextRemoveEvent(localOffset, length);
                 eventHistory.add(event);
             }
 
+            if(offset != (localOffset - lastInsertStringLength)){
+                localOffset = offset;
+            }
+
             event = new TextInsertEvent(localOffset, str);
-            eventHistory.add(event);
             localOffset += str.length();
+            lastInsertStringLength = str.length();
+            eventHistory.add(event);
+
             System.out.println("Replace called locally");
             System.out.println("Local offset is: " + localOffset);
 
