@@ -1,7 +1,5 @@
-import javax.swing.*;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.Caret;
 import javax.swing.text.DocumentFilter;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -17,15 +15,10 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
-    private int localOffset;
-    private int lastInsertStringLength, lastRemoveStringLength;
 
     public DocumentEventCapturer() {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
-        this.localOffset = -1;
-        this.lastInsertStringLength = 0;
-        this.lastRemoveStringLength = 0;
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
@@ -34,6 +27,10 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     public void clear() {
         eventHistory.clear();
+    }
+
+    public void put(MyTextEvent textEvent) throws InterruptedException {
+        eventHistory.put(textEvent);
     }
 
     public void enable() {
@@ -49,29 +46,26 @@ public class DocumentEventCapturer extends DocumentFilter {
             String str, AttributeSet a)
             throws BadLocationException {
 
+	/* Queue a copy of the event and then modify the textarea */
         if (enabled) {
-            TextInsertEvent event = new TextInsertEvent(localOffset, str);
+            super.insertString(fb, offset, str, a);
+            TextInsertEvent event = new TextInsertEvent(offset, str);
             eventHistory.add(event);
+
         } else {
             super.insertString(fb, offset, str, a);
         }
-
 
     }
 
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
+    /* Queue a copy of the event and then modify the textarea */
         if (enabled) {
-            if(offset != (localOffset + lastRemoveStringLength)){
-                localOffset = offset;
-            }
-            TextRemoveEvent event = new TextRemoveEvent(localOffset, length);
-            localOffset -= length;
-            lastRemoveStringLength = length;
+            super.remove(fb, offset, length);
+            TextRemoveEvent event = new TextRemoveEvent(offset, length);
             eventHistory.add(event);
 
-            System.out.println("Removal called locally");
-            System.out.println("Local offset is: " + localOffset);
         } else {
             super.remove(fb, offset, length);
         }
@@ -82,30 +76,20 @@ public class DocumentEventCapturer extends DocumentFilter {
             int length,
             String str, AttributeSet a)
             throws BadLocationException {
+	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if (enabled) {
+            super.replace(fb, offset, length, str, a);
             if (length > 0) {
-                localOffset = offset;
-                event = new TextRemoveEvent(localOffset, length);
+                event = new TextRemoveEvent(offset, length);
                 eventHistory.add(event);
             }
-
-            if(offset != (localOffset - lastInsertStringLength)){
-                localOffset = offset;
-            }
-
-            event = new TextInsertEvent(localOffset, str);
-            localOffset += str.length();
-            lastInsertStringLength = str.length();
+            event = new TextInsertEvent(offset, str);
             eventHistory.add(event);
-
-            System.out.println("Replace called locally");
-            System.out.println("Local offset is: " + localOffset);
 
         } else {
             super.replace(fb, offset, length, str, a);
         }
-
 
     }
 
