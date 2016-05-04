@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -14,11 +15,13 @@ public class EventReplayer implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
     private DocumentEventCapturer dec;
+    private ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer;
 
-    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec) {
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer) {
         this.incomingQueue = incomingQueue;
         this.area = area;
         this.dec = dec;
+        this.localBuffer = localBuffer;
 
     }
 
@@ -32,16 +35,14 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            String s = area.getText(tie.getOffset(),tie.getText().length());
-                            s = s.trim();
-                            System.out.println("returned text is: " + s);
-                            if(!s.equals("")){
-                                System.out.println("replacing text");
+                            MyTextEvent localEvent = localBuffer.get(tie);
+                            if(localEvent != null){
                                 area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length());
+                                localBuffer.remove(tie);
                             }else{
-                                System.out.println("inserting text");
                                 area.insert(tie.getText(), tie.getOffset());
                             }
+
 
 
                             dec.enable();
@@ -57,6 +58,7 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
+
                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             dec.enable();
                         } catch (Exception e) {

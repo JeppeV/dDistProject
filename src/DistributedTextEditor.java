@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
@@ -30,9 +31,11 @@ public class DistributedTextEditor extends JFrame {
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private DocumentEventCapturer dec = new DocumentEventCapturer();
+    private DocumentEventCapturer dec;
 
     public DistributedTextEditor() {
+        ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer = new ConcurrentHashMap<>();
+        dec = new DocumentEventCapturer( getLocalHostAddress(), localBuffer);
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
 
@@ -85,11 +88,12 @@ public class DistributedTextEditor extends JFrame {
             and the EventReplayer takes elements from this list and replays them in the second text area.
          */
         incomingEvents = new LinkedBlockingQueue<>();
+
         /*
             The EventReplayer runnable keeps running while the peer lives.
             It will only terminate once the program exits.
          */
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
         Thread ert = new Thread(eventReplayer);
         ert.start();
 

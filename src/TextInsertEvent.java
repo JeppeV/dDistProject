@@ -5,8 +5,8 @@ public class TextInsertEvent extends MyTextEvent {
 
     private String text;
 
-    public TextInsertEvent(int offset, String text) {
-        super(offset);
+    public TextInsertEvent(String ipAddress, int timestamp, int offset, String text) {
+        super(ipAddress, timestamp, offset);
         this.text = text;
     }
 
