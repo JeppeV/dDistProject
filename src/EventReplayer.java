@@ -3,15 +3,10 @@ import java.awt.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * Takes the event recorded by the DocumentEventCapturer and replays
- * them in a JTextArea. The delay of 1 sec is only to make the individual
- * steps in the reply visible to humans.
- *
- * @author Jesper Buus Nielsen
- */
+
 public class EventReplayer implements Runnable {
 
+    private int reset, normal;
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
     private DocumentEventCapturer dec;
@@ -39,6 +34,7 @@ public class EventReplayer implements Runnable {
                             if(localEvent == null){
                                 area.insert(tie.getText(), tie.getOffset());
                             }
+                            normal++;
                             localBuffer.remove(tie);
                             dec.enable();
                         } catch (Exception e) {
@@ -57,6 +53,7 @@ public class EventReplayer implements Runnable {
                             if(localEvent == null){
                                 area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             }
+                            normal++;
                             localBuffer.remove(tre);
                             dec.enable();
                         } catch (Exception e) {
@@ -75,6 +72,7 @@ public class EventReplayer implements Runnable {
                             area.insert(tse.getAreaText(), 0);
                             area.getCaret().setDot(tse.getOffset());
                             System.out.println("Text reset");
+                            reset++;
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -84,6 +82,10 @@ public class EventReplayer implements Runnable {
                         }
                     });
                 }
+                System.out.println("______________________________");
+                System.out.println("Normal inserts: " + normal);
+                System.out.println("Resets: " + reset);
+
             } catch (Exception e) {
                 wasInterrupted = true;
             }
