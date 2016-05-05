@@ -38,7 +38,7 @@ public class ServerEventReplayer implements Runnable {
                             outgoingQueue.put(tie);
                             if(!isSameAreaTextHash(tie)){
                                 TextEventSender sender = senderMap.get(tie);
-                                sender.put(new TextSyncEvent(serverTextArea.getText()));
+                                sender.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
                             }
                             senderMap.remove(tie);
                         } catch (Exception e) {
@@ -53,7 +53,7 @@ public class ServerEventReplayer implements Runnable {
                             outgoingQueue.put(tre);
                             if(!isSameAreaTextHash(tre)){
                                 TextEventSender sender = senderMap.get(tre);
-                                sender.put(new TextSyncEvent(serverTextArea.getText()));
+                                sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
                             }
                             senderMap.remove(tre);
                         } catch (Exception e) {

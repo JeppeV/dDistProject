@@ -5,9 +5,9 @@ public class TextSyncEvent extends MyTextEvent {
 
     private String areaText;
 
-    public TextSyncEvent(String text) {
-        super("", -1, 0, -1);
-        this.areaText = text;
+    public TextSyncEvent(int offset, String areaText) {
+        super("", -1, 0, offset);
+        this.areaText = areaText;
     }
 
     public String getAreaText(){

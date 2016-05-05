@@ -75,6 +75,7 @@ public class EventReplayer implements Runnable {
                             dec.disable();
                             area.setText("");
                             area.insert(tse.getAreaText(), 0);
+                            area.getCaret().setDot(tse.getOffset());
                             System.out.println("Text reset");
                             dec.enable();
                         } catch (Exception e) {
