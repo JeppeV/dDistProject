@@ -4,6 +4,8 @@ import java.io.Serializable;
  * @author Jesper Buus Nielsen
  */
 public class MyTextEvent implements Serializable {
+
+    static final long serialVersionUID = 0L;
     private int offset;
     private int timestamp;
     private String ipAddress;
