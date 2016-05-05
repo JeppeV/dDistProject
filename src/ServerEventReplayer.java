@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,9 +14,9 @@ public class ServerEventReplayer implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private LinkedBlockingQueue<MyTextEvent> outgoingQueue;
     private JTextArea serverTextArea;
-    private ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap;
+    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
 
-    public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap) {
+    public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
         this.incomingQueue = incomingQueue;
         this.outgoingQueue = outgoingQueue;
         this.serverTextArea = serverTextArea;
@@ -32,34 +31,33 @@ public class ServerEventReplayer implements Runnable {
                 MyTextEvent mte = incomingQueue.take();
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
-                    EventQueue.invokeLater(() -> {
-                        try {
-                            serverTextArea.insert(tie.getText(), tie.getOffset());
-                            outgoingQueue.put(tie);
-                            if(!isSameAreaTextHash(tie)){
-                                TextEventSender sender = senderMap.get(tie);
-                                sender.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
-                            }
-                            senderMap.remove(tie);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+
+                    try {
+                        serverTextArea.insert(tie.getText(), tie.getOffset());
+                        outgoingQueue.put(tie);
+                        if (!isSameAreaTextHash(tie)) {
+                            TextEventSender sender = senderMap.get(tie);
+                            sender.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
                         }
-                    });
+                        senderMap.remove(tie);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                 } else if (mte instanceof TextRemoveEvent) {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
-                    EventQueue.invokeLater(() -> {
-                        try {
-                            serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
-                            outgoingQueue.put(tre);
-                            if(!isSameAreaTextHash(tre)){
-                                TextEventSender sender = senderMap.get(tre);
-                                sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
-                            }
-                            senderMap.remove(tre);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    try {
+                        serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                        outgoingQueue.put(tre);
+                        if (!isSameAreaTextHash(tre)) {
+                            TextEventSender sender = senderMap.get(tre);
+                            sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
                         }
-                    });
+                        senderMap.remove(tre);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                 }
 
             } catch (Exception e) {
@@ -68,7 +66,7 @@ public class ServerEventReplayer implements Runnable {
         }
     }
 
-    private boolean isSameAreaTextHash(MyTextEvent remoteEvent){
+    private boolean isSameAreaTextHash(MyTextEvent remoteEvent) {
         int localHash = serverTextArea.getText().hashCode();
         int remoteHash = remoteEvent.getTextHash();
         return localHash == remoteHash;
