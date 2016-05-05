@@ -34,10 +34,12 @@ public class ServerEventReplayer implements Runnable {
 
                     try {
                         serverTextArea.insert(tie.getText(), tie.getOffset());
-                        outgoingQueue.put(tie);
+
                         if (!isSameAreaTextHash(tie)) {
                             TextEventSender sender = senderMap.get(tie);
-                            sender.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
+                            outgoingQueue.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
+                        } else {
+                            outgoingQueue.put(tie);
                         }
                         senderMap.remove(tie);
                     } catch (Exception e) {

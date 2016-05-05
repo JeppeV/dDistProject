@@ -68,8 +68,9 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
+                            int caretPosition = area.getCaretPosition();
                             area.setText(tse.getAreaText());
-                            area.getCaret().setDot(tse.getOffset());
+                            area.getCaret().setDot(caretPosition);
                             System.out.println("Text reset");
                             reset++;
                             dec.enable();
