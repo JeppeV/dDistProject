@@ -56,8 +56,6 @@ public class EventReplayer implements Runnable {
                             MyTextEvent localEvent = localBuffer.get(tre);
                             if(localEvent == null){
                                 area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
-                            }else{
-                                System.out.println("Local remove detected");
                             }
                             localBuffer.remove(tre);
                             dec.enable();

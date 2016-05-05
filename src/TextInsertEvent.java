@@ -3,6 +3,7 @@
  */
 public class TextInsertEvent extends MyTextEvent {
 
+    static final long serialVersionUID = 0L;
     private String text;
 
     public TextInsertEvent(String ipAddress, int timestamp, int textHash, int offset, String text) {

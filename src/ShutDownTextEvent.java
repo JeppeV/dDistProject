@@ -17,6 +17,7 @@
  */
 public class ShutDownTextEvent extends MyTextEvent {
 
+    static final long serialVersionUID = 3L;
     private boolean shutdown;
 
     public ShutDownTextEvent(boolean shutdown) {

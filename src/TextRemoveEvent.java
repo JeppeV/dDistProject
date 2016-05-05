@@ -1,5 +1,6 @@
 public class TextRemoveEvent extends MyTextEvent {
 
+    static final long serialVersionUID = 1L;
     private int length;
 
     public TextRemoveEvent(String ipAddress, int timestamp, int textHash, int offset, int length) {

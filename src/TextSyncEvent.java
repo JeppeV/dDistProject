@@ -3,6 +3,7 @@
  */
 public class TextSyncEvent extends MyTextEvent {
 
+    static final long serialVersionUID = 2L;
     private String areaText;
 
     public TextSyncEvent(int offset, String areaText) {
