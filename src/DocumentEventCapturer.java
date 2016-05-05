@@ -57,7 +57,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             String str, AttributeSet a)
             throws BadLocationException {
 
-	/* Queue a copy of the event and then modify the textarea */
         if (enabled) {
             super.insertString(fb, offset, str, a);
             TextInsertEvent event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
@@ -72,7 +71,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
-    /* Queue a copy of the event and then modify the textarea */
         if (enabled) {
             super.remove(fb, offset, length);
             TextRemoveEvent event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
@@ -89,7 +87,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             int length,
             String str, AttributeSet a)
             throws BadLocationException {
-	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if (enabled) {
             if (length > 0) {
@@ -99,6 +96,7 @@ public class DocumentEventCapturer extends DocumentFilter {
                 eventHistory.add(event);
             }
             super.insertString(fb, offset, str, a);
+            System.out.println("inserted string with offset: " + offset);
             event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
