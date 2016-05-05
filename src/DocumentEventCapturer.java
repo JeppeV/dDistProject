@@ -96,7 +96,6 @@ public class DocumentEventCapturer extends DocumentFilter {
                 eventHistory.add(event);
             }
             super.insertString(fb, offset, str, a);
-            System.out.println("inserted string with offset: " + offset);
             event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
