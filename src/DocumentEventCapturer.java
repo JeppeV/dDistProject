@@ -92,18 +92,20 @@ public class DocumentEventCapturer extends DocumentFilter {
 	/* Queue a copy of the event and then modify the text */
         MyTextEvent event;
         if (enabled) {
-            super.replace(fb, offset, length, str, a);
             if (length > 0) {
+                super.remove(fb, offset, length);
                 event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
                 localBuffer.put(event, event);
                 eventHistory.add(event);
             }
+            super.insertString(fb, offset, str, a);
             event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
         } else {
-            super.replace(fb, offset, length, str, a);
+            super.remove(fb, offset, length);
+            super.insertString(fb, offset, str, a);
         }
 
     }
