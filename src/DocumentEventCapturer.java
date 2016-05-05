@@ -1,3 +1,4 @@
+import javax.swing.*;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
@@ -19,13 +20,15 @@ public class DocumentEventCapturer extends DocumentFilter {
     private int currentTimestamp;
     private String IPAddress;
     private ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer;
+    private JTextArea textArea;
 
-    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer) {
+    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer, JTextArea textArea) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.currentTimestamp = 0;
         this.IPAddress = IPAddress;
         this.localBuffer = localBuffer;
+        this.textArea = textArea;
 
     }
 
@@ -57,7 +60,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 	/* Queue a copy of the event and then modify the textarea */
         if (enabled) {
             super.insertString(fb, offset, str, a);
-            TextInsertEvent event = new TextInsertEvent(IPAddress, currentTimestamp++, offset, str);
+            TextInsertEvent event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -71,8 +74,9 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
     /* Queue a copy of the event and then modify the textarea */
         if (enabled) {
-            System.out.println("Remove offset: " + offset);
-            TextRemoveEvent event = new TextRemoveEvent(IPAddress, currentTimestamp++, offset, length);
+            super.remove(fb, offset, length);
+            TextRemoveEvent event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
+            localBuffer.put(event, event);
             eventHistory.add(event);
 
         } else {
@@ -90,11 +94,11 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             super.replace(fb, offset, length, str, a);
             if (length > 0) {
-                event = new TextRemoveEvent(IPAddress, currentTimestamp++, offset, length);
+                event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
                 localBuffer.put(event, event);
                 eventHistory.add(event);
             }
-            event = new TextInsertEvent(IPAddress, currentTimestamp++, offset, str);
+            event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -102,6 +106,10 @@ public class DocumentEventCapturer extends DocumentFilter {
             super.replace(fb, offset, length, str, a);
         }
 
+    }
+
+    private int getTextAreaHash(){
+        return textArea.getText().hashCode();
     }
 
 }

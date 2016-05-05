@@ -36,14 +36,10 @@ public class EventReplayer implements Runnable {
                         try {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tie);
-                            if(localEvent != null){
-                                area.replaceRange(tie.getText(), tie.getOffset(), tie.getOffset() + tie.getText().length());
-                                localBuffer.remove(tie);
-                            }else{
+                            if(localEvent == null){
                                 area.insert(tie.getText(), tie.getOffset());
                             }
-
-
+                            localBuffer.remove(tie);
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -57,8 +53,29 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-
-                            area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                            MyTextEvent localEvent = localBuffer.get(tre);
+                            if(localEvent == null){
+                                area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                            }else{
+                                System.out.println("Local remove detected");
+                            }
+                            localBuffer.remove(tre);
+                            dec.enable();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                /* We catch all axceptions, as an uncaught exception would make the
+                 * EDT unwind, which is now healthy.
+                 */
+                        }
+                    });
+                } else if(mte instanceof TextSyncEvent) {
+                    final TextSyncEvent tse = (TextSyncEvent) mte;
+                    EventQueue.invokeLater(() -> {
+                        try {
+                            dec.disable();
+                            area.setText("");
+                            area.insert(tse.getAreaText(), 0);
+                            System.out.println("Text reset");
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();

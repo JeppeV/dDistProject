@@ -7,15 +7,25 @@ public class MyTextEvent implements Serializable {
     private int offset;
     private int timestamp;
     private String ipAddress;
+    private int textHash;
 
-    protected MyTextEvent(String ipAddress, int timestamp, int offset) {
+    protected MyTextEvent(String ipAddress, int timestamp, int textHash, int offset) {
         this.ipAddress = ipAddress;
         this.timestamp = timestamp;
         this.offset = offset;
+        this.textHash = textHash;
     }
 
     public int getOffset() {
         return offset;
+    }
+
+    public void setTextHash(int hash){
+        this.textHash = hash;
+    }
+
+    public int getTextHash(){
+        return textHash;
     }
 
     @Override

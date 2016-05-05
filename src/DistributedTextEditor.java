@@ -34,10 +34,10 @@ public class DistributedTextEditor extends JFrame {
     private DocumentEventCapturer dec;
 
     public DistributedTextEditor() {
-        ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer = new ConcurrentHashMap<>();
-        dec = new DocumentEventCapturer( getLocalHostAddress(), localBuffer);
+
+        initClient();
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
+
 
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
@@ -50,8 +50,6 @@ public class DistributedTextEditor extends JFrame {
 
         content.add(ipaddress, BorderLayout.CENTER);
         content.add(portNumber, BorderLayout.CENTER);
-
-        area1.hashCode();
 
         JMenuBar JMB = new JMenuBar();
         setJMenuBar(JMB);
@@ -89,18 +87,27 @@ public class DistributedTextEditor extends JFrame {
             Each TextEventReceiver then puts incoming text events onto the queue,
             and the EventReplayer takes elements from this list and replays them in the second text area.
          */
-        incomingEvents = new LinkedBlockingQueue<>();
+
 
         /*
             The EventReplayer runnable keeps running while the peer lives.
             It will only terminate once the program exits.
          */
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
-        Thread ert = new Thread(eventReplayer);
-        ert.start();
+
 
 
     }
+
+    private void initClient(){
+        ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer = new ConcurrentHashMap<>();
+        dec = new DocumentEventCapturer( getLocalHostAddress(), localBuffer, area1);
+        ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
+        incomingEvents = new LinkedBlockingQueue<>();
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
+        Thread ert = new Thread(eventReplayer);
+        ert.start();
+    }
+
 
     /**
      * This method is called if this peer is supposed to act as a server.
@@ -108,7 +115,7 @@ public class DistributedTextEditor extends JFrame {
     private DisconnectHandler initServerThreads() {
         //clear the document event capturer queue
         dec.clear();
-        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, dec, area1);
+        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
         return connectionManager;

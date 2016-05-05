@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -13,15 +14,23 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class TextEventReceiver implements Runnable {
 
-    private TextEventSender sender;
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
+    private TextEventSender sender;
+    private ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap;
+
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap) {
+        this.socket = socket;
+        this.incomingEvents = incomingEvents;
+        this.sender = sender;
+        this.senderMap = senderMap;
+    }
 
     public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.sender = sender;
-
+        this.senderMap = null;
     }
 
     @Override
@@ -44,9 +53,9 @@ public class TextEventReceiver implements Runnable {
                     }
                     break;
                 } else {
+                    if(senderMap != null) senderMap.put(textEvent, sender);
                     incomingEvents.put(textEvent);
                 }
-
             }
             if (shutdown) {
                 objectInputStream.close();

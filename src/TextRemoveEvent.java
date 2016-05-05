@@ -2,8 +2,8 @@ public class TextRemoveEvent extends MyTextEvent {
 
     private int length;
 
-    public TextRemoveEvent(String ipAddress, int timestamp, int offset, int length) {
-        super(ipAddress, timestamp, offset);
+    public TextRemoveEvent(String ipAddress, int timestamp, int textHash, int offset, int length) {
+        super(ipAddress, timestamp, textHash, offset);
         this.length = length;
     }
 

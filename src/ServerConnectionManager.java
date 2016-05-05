@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -15,17 +16,21 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     private ServerSocket serverSocket;
-    private DocumentEventCapturer documentEventCapturer;
-    private LinkedBlockingQueue<MyTextEvent> events;
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents, outgoingEvents;
+    private ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap;
+    private ServerEventReplayer serverEventReplayer;
     private ServerSenderManager serverSenderManager;
-    private JTextArea area;
+    private JTextArea serverTextArea;
 
-    public ServerConnectionManager(ServerSocket serverSocket, DocumentEventCapturer documentEventCapturer, JTextArea area) {
+    public ServerConnectionManager(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
-        this.documentEventCapturer = documentEventCapturer;
-        this.events = new LinkedBlockingQueue<>();
-        this.area = area;
-        this.serverSenderManager = new ServerSenderManager(events);
+        this.incomingEvents = new LinkedBlockingQueue<>();
+        this.outgoingEvents = new LinkedBlockingQueue<>();
+        this.senderMap = new ConcurrentHashMap<>();
+        this.serverTextArea = new JTextArea();
+        this.serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap);
+        this.serverSenderManager = new ServerSenderManager(outgoingEvents);
+        new Thread(serverEventReplayer).start();
         new Thread(serverSenderManager).start();
 
 
@@ -49,13 +54,13 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     private void initClientThreads(Socket socket) {
         TextEventSender sender = new TextEventSender(socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket, events, sender);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, senderMap);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
         try {
-            serverSenderManager.addSender(sender, area);
+            serverSenderManager.addSender(sender, serverTextArea);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -73,6 +78,6 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     @Override
     public void disconnect() throws InterruptedException {
-        events.put(new ShutDownTextEvent(false));
+        outgoingEvents.put(new ShutDownTextEvent(false));
     }
 }
