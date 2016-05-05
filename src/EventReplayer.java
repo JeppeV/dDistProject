@@ -44,7 +44,6 @@ public class EventReplayer implements Runnable {
                             }
 
 
-
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();

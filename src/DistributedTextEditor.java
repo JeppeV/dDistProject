@@ -51,6 +51,8 @@ public class DistributedTextEditor extends JFrame {
         content.add(ipaddress, BorderLayout.CENTER);
         content.add(portNumber, BorderLayout.CENTER);
 
+        area1.hashCode();
+
         JMenuBar JMB = new JMenuBar();
         setJMenuBar(JMB);
         JMenu file = new JMenu("File");
