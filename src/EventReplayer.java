@@ -69,7 +69,7 @@ public class EventReplayer implements Runnable {
                         try {
                             dec.disable();
                             int caretPosition = area.getCaretPosition();
-                            area.setText(tse.getAreaText());
+                            area.replaceRange(tse.getAreaText(), 0, area.getText().length());
                             area.getCaret().setDot(caretPosition);
                             System.out.println("Text reset");
                             reset++;
