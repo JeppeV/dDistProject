@@ -22,11 +22,7 @@ public class MyTextEvent implements Serializable {
         return offset;
     }
 
-    public void setTextHash(int hash){
-        this.textHash = hash;
-    }
-
-    public int getTextHash(){
+    public int getTextHash() {
         return textHash;
     }
 

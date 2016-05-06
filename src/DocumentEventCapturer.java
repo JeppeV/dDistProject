@@ -19,10 +19,10 @@ public class DocumentEventCapturer extends DocumentFilter {
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
     private int currentTimestamp;
     private String IPAddress;
-    private ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer;
+    private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
     private JTextArea textArea;
 
-    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer, JTextArea textArea) {
+    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer, JTextArea textArea) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.currentTimestamp = 0;
@@ -38,10 +38,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     public void clear() {
         eventHistory.clear();
-    }
-
-    public void put(MyTextEvent textEvent) throws InterruptedException {
-        eventHistory.put(textEvent);
     }
 
     public void enable() {
@@ -107,7 +103,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     }
 
-    private int getTextAreaHash(){
+    private int getTextAreaHash() {
         return textArea.getText().hashCode();
     }
 

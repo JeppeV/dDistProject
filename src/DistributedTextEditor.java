@@ -95,12 +95,11 @@ public class DistributedTextEditor extends JFrame {
          */
 
 
-
     }
 
-    private void initClient(){
-        ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer = new ConcurrentHashMap<>();
-        dec = new DocumentEventCapturer( getLocalHostAddress(), localBuffer, area1);
+    private void initClient() {
+        ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
+        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1);
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);

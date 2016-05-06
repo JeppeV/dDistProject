@@ -11,11 +11,9 @@ public class TextSyncEvent extends MyTextEvent {
         this.areaText = areaText;
     }
 
-    public String getAreaText(){
+    public String getAreaText() {
         return areaText;
     }
-
-
 
 
 }
