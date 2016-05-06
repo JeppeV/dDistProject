@@ -34,11 +34,12 @@ public class ServerEventReplayer implements Runnable {
                     try {
 
                         serverTextArea.insert(tie.getText(), tie.getOffset());
+                        outgoingQueue.put(tie);
                         if (!compareHash(tie)) {
                             TextEventSender sender = senderMap.get(tie);
                             sender.put(new TextSyncEvent(tie.getOffset(), serverTextArea.getText()));
                         }
-                        outgoingQueue.put(tie);
+
                         senderMap.remove(tie);
 
                     } catch (Exception e) {
@@ -50,12 +51,12 @@ public class ServerEventReplayer implements Runnable {
                     try {
 
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
-
+                        outgoingQueue.put(tre);
                         if (!compareHash(tre)) {
                             TextEventSender sender = senderMap.get(tre);
                             sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
                         }
-                        outgoingQueue.put(tre);
+
                         senderMap.remove(tre);
 
                     } catch (Exception e) {
