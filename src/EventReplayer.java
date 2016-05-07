@@ -10,9 +10,9 @@ public class EventReplayer implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
     private DocumentEventCapturer dec;
-    private ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer;
+    private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
 
-    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent,MyTextEvent> localBuffer) {
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer) {
         this.incomingQueue = incomingQueue;
         this.area = area;
         this.dec = dec;
@@ -31,7 +31,7 @@ public class EventReplayer implements Runnable {
                         try {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tie);
-                            if(localEvent == null){
+                            if (localEvent == null) {
                                 area.insert(tie.getText(), tie.getOffset());
                             }
                             normal++;
@@ -50,7 +50,7 @@ public class EventReplayer implements Runnable {
                         try {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tre);
-                            if(localEvent == null){
+                            if (localEvent == null) {
                                 area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             }
                             normal++;
@@ -58,12 +58,9 @@ public class EventReplayer implements Runnable {
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
-                /* We catch all axceptions, as an uncaught exception would make the
-                 * EDT unwind, which is now healthy.
-                 */
                         }
                     });
-                } else if(mte instanceof TextSyncEvent) {
+                } else if (mte instanceof TextSyncEvent) {
                     final TextSyncEvent tse = (TextSyncEvent) mte;
                     EventQueue.invokeLater(() -> {
                         try {
@@ -76,9 +73,6 @@ public class EventReplayer implements Runnable {
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
-                /* We catch all axceptions, as an uncaught exception would make the
-                 * EDT unwind, which is now healthy.
-                 */
                         }
                     });
                 }

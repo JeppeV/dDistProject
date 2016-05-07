@@ -17,7 +17,7 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     private ServerSocket serverSocket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents, outgoingEvents;
-    private ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap;
+    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
     private ServerEventReplayer serverEventReplayer;
     private ServerSenderManager serverSenderManager;
     private JTextArea serverTextArea;

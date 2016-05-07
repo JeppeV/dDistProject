@@ -31,17 +31,17 @@ public class ServerEventReplayer implements Runnable {
                 MyTextEvent mte = incomingQueue.take();
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
-
                     try {
-                        serverTextArea.insert(tie.getText(), tie.getOffset());
 
-                        if (!isSameAreaTextHash(tie)) {
+                        serverTextArea.insert(tie.getText(), tie.getOffset());
+                        outgoingQueue.put(tie);
+                        if (!compareHash(tie)) {
                             TextEventSender sender = senderMap.get(tie);
-                            outgoingQueue.put(new TextSyncEvent(tie.getOffset() + tie.getText().length(), serverTextArea.getText()));
-                        } else {
-                            outgoingQueue.put(tie);
+                            sender.put(new TextSyncEvent(tie.getOffset(), serverTextArea.getText()));
                         }
+
                         senderMap.remove(tie);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -49,16 +49,20 @@ public class ServerEventReplayer implements Runnable {
                 } else if (mte instanceof TextRemoveEvent) {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
                     try {
+
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        if (!isSameAreaTextHash(tre)) {
+                        if (!compareHash(tre)) {
                             TextEventSender sender = senderMap.get(tre);
                             sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
                         }
+
                         senderMap.remove(tre);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+
 
                 }
 
@@ -68,7 +72,7 @@ public class ServerEventReplayer implements Runnable {
         }
     }
 
-    private boolean isSameAreaTextHash(MyTextEvent remoteEvent) {
+    private boolean compareHash(MyTextEvent remoteEvent) {
         int localHash = serverTextArea.getText().hashCode();
         int remoteHash = remoteEvent.getTextHash();
         return localHash == remoteHash;

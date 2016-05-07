@@ -4,6 +4,8 @@ import java.io.Serializable;
  * @author Jesper Buus Nielsen
  */
 public class MyTextEvent implements Serializable {
+
+    static final long serialVersionUID = 0L;
     private int offset;
     private int timestamp;
     private String ipAddress;
@@ -20,11 +22,7 @@ public class MyTextEvent implements Serializable {
         return offset;
     }
 
-    public void setTextHash(int hash){
-        this.textHash = hash;
-    }
-
-    public int getTextHash(){
+    public int getTextHash() {
         return textHash;
     }
 

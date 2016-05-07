@@ -17,9 +17,9 @@ public class TextEventReceiver implements Runnable {
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private TextEventSender sender;
-    private ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap;
+    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
 
-    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConcurrentHashMap<MyTextEvent,TextEventSender> senderMap) {
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.sender = sender;
@@ -53,7 +53,7 @@ public class TextEventReceiver implements Runnable {
                     }
                     break;
                 } else {
-                    if(senderMap != null) senderMap.put(textEvent, sender);
+                    if (senderMap != null) senderMap.put(textEvent, sender);
                     incomingEvents.put(textEvent);
                 }
             }
