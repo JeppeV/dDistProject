@@ -2,10 +2,7 @@ import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -36,9 +33,9 @@ public class DistributedTextEditor extends JFrame {
     public DistributedTextEditor() {
 
         initClient();
+        clearIpAndPortFieldWhenClicked();
+
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
-
-
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
@@ -346,6 +343,22 @@ public class DistributedTextEditor extends JFrame {
             Save.setEnabled(false);
         } catch (IOException e) {
         }
+    }
+
+    private void clearIpAndPortFieldWhenClicked(){
+        ipaddress.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ipaddress.setText("");
+            }
+        });
+
+        portNumber.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                portNumber.setText("");
+            }
+        });
     }
 
     public static void main(String[] arg) {
