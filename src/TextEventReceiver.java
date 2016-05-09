@@ -18,7 +18,6 @@ public class TextEventReceiver implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private TextEventSender sender;
     private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
-
     private LamportClock lamportClock;
 
     public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
@@ -26,6 +25,7 @@ public class TextEventReceiver implements Runnable {
         this.incomingEvents = incomingEvents;
         this.sender = sender;
         this.senderMap = senderMap;
+        this.lamportClock = null;
     }
 
     public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, LamportClock lamportClock) {

@@ -14,10 +14,12 @@ public class LamportClock {
     }
 
     public int generateTimestamp(){
+        System.out.println("Local time is " + time);
         return time++;
     }
 
     public void processTimestamp(int timestamp){
         time = Math.max(time, timestamp);
+        System.out.println("Local time is " + time);
     }
 }
