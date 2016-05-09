@@ -51,7 +51,7 @@ public abstract class MyTextEvent implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = offset;
+        int result = textHash;
         result = 31 * result + timestamp;
         result = 31 * result + (ipAddress != null ? ipAddress.hashCode() : 0);
         return result;
