@@ -62,7 +62,6 @@ public class EventReplayer implements Runnable {
                             area.replaceRange(null, 0, area.getText().length());
                             area.insert(tse.getAreaText(), 0);
                             area.getCaret().setDot(pos);
-                            System.out.println("Text reset event received");
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
