@@ -36,13 +36,11 @@ public class ServerEventReplayer implements Runnable {
         while (!wasInterrupted) {
             try {
                 MyTextEvent mte = incomingQueue.take();
-                //serverClock.processTimestamp(mte.getTimestamp());
                 TextEventSender sender = senderMap.get(mte);
                 mte = adjustOffset(mte);
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     try {
-                        System.out.println("Server inserting event with offset: " + tie.getOffset());
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
                         syncSender(tie.getOffset() + tie.getText().length(), tie, sender);
@@ -101,14 +99,6 @@ public class ServerEventReplayer implements Runnable {
                 }
 
             }
-            if(event.getTimestamp() < log.size() - 1) {
-                log.get(event.getTimestamp() + 1).add(new TextLengthEvent(event.getOffset(), offsetAdjustment));
-            } else {
-                LinkedList<MyTextEvent> l = new LinkedList<>();
-                l.add(new TextLengthEvent(event.getOffset(), offsetAdjustment));
-                log.add(event.getTimestamp() + 1, l);
-            }
-            System.out.println("Offset adjusted by: " + offsetAdjustment);
             event.setOffset(event.getOffset() + offsetAdjustment);
         }else{
             recentEvents = new LinkedList<>();
