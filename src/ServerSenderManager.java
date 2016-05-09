@@ -4,7 +4,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by Jeppe Vinberg on 30-04-2016.
  *
- * The resposibility of this class is to manage several 
+ * The resposibility of this class is to manage several
  */
 public class ServerSenderManager implements Runnable {
 
