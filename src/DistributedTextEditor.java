@@ -78,20 +78,6 @@ public class DistributedTextEditor extends JFrame {
         setTitle("Disconnected");
         setVisible(true);
 
-        /*
-            incomingEvents is a queue where incoming text events are stored.
-            A reference to the queue is delegated to instances of TextEventReceiver
-            Each TextEventReceiver then puts incoming text events onto the queue,
-            and the EventReplayer takes elements from this list and replays them in the second text area.
-         */
-
-
-        /*
-            The EventReplayer runnable keeps running while the peer lives.
-            It will only terminate once the program exits.
-         */
-
-
     }
 
     private void initClient() {
