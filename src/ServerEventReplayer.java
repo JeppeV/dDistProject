@@ -91,7 +91,7 @@ public class ServerEventReplayer implements Runnable {
         if(event.getTimestamp() < log.size()){
             recentEvents = log.get(event.getTimestamp());
             for(MyTextEvent e : recentEvents){
-                if(e.getOffset() <= event.getOffset()){
+                if(e.getOffset() < event.getOffset()){
                     if(e instanceof TextInsertEvent){
                         offsetAdjustment += e.getLength();
                     }else if(e instanceof  TextRemoveEvent){

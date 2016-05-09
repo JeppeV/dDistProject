@@ -57,6 +57,7 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             super.insertString(fb, offset, str, a);
             TextInsertEvent event = new TextInsertEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, str);
+            System.out.println("client time is " + lamportClock.getTime());
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -71,6 +72,7 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             super.remove(fb, offset, length);
             TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, length);
+            System.out.println("client time is " + lamportClock.getTime());
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -89,11 +91,13 @@ public class DocumentEventCapturer extends DocumentFilter {
             if (length > 0) {
                 super.remove(fb, offset, length);
                 event = new TextRemoveEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, length);
+                System.out.println("client time is " + lamportClock.getTime());
                 localBuffer.put(event, event);
                 eventHistory.add(event);
             }
             super.insertString(fb, offset, str, a);
             event = new TextInsertEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, str);
+            System.out.println("client time is " + lamportClock.getTime());
             localBuffer.put(event, event);
             eventHistory.add(event);
 
