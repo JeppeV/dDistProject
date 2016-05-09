@@ -101,6 +101,13 @@ public class ServerEventReplayer implements Runnable {
                 }
 
             }
+            if(event.getTimestamp() < log.size() - 1) {
+                log.get(event.getTimestamp() + 1).add(new TextLengthEvent(event.getOffset(), offsetAdjustment));
+            } else {
+                LinkedList<MyTextEvent> l = new LinkedList<>();
+                l.add(new TextLengthEvent(event.getOffset(), offsetAdjustment));
+                log.add(event.getTimestamp() + 1, l);
+            }
             System.out.println("Offset adjusted by: " + offsetAdjustment);
             event.setOffset(event.getOffset() + offsetAdjustment);
         }else{
