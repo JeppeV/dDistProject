@@ -3,11 +3,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Takes the event recorded by the DocumentEventCapturer and replays
- * them in a JTextArea. The delay of 1 sec is only to make the individual
- * steps in the reply visible to humans.
- *
- * @author Jesper Buus Nielsen
+ * A server side version of the EventReplayer.
+ * The responsibility of this class is to take new incoming events,
+ * inserting them into the authorative serverTextArea and sending the events to the clients.
+ * Due to client side prediction of events, this class also compares the hash of the text area of the
+ * author of each event to the hash of the authorative serverTextArea. If these are not equal,
+ * the prediction of the client is wrong, and we send a TextSyncEvent with the whole text
+ * of the serverTextArea.
  */
 public class ServerEventReplayer implements Runnable {
 
@@ -32,16 +34,9 @@ public class ServerEventReplayer implements Runnable {
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     try {
-
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        if (!compareHash(tie)) {
-                            TextEventSender sender = senderMap.get(tie);
-                            sender.put(new TextSyncEvent(tie.getOffset(), serverTextArea.getText()));
-                        }
-
-                        senderMap.remove(tie);
-
+                        syncSender(tie);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -49,27 +44,30 @@ public class ServerEventReplayer implements Runnable {
                 } else if (mte instanceof TextRemoveEvent) {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
                     try {
-
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        if (!compareHash(tre)) {
-                            TextEventSender sender = senderMap.get(tre);
-                            sender.put(new TextSyncEvent(tre.getOffset(), serverTextArea.getText()));
-                        }
-
-                        senderMap.remove(tre);
-
+                        syncSender(tre);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
                 }
 
             } catch (Exception e) {
                 wasInterrupted = true;
             }
         }
+    }
+
+    /**
+     * If the client's text area is not the same as that on the server, send a TextSyncEvent to the client.
+     * @param event the event sent by a client
+     */
+    private void syncSender(MyTextEvent event) throws InterruptedException{
+        if (!compareHash(event)) {
+            TextEventSender sender = senderMap.get(event);
+            sender.put(new TextSyncEvent(serverTextArea.getText()));
+        }
+        senderMap.remove(event);
     }
 
     private boolean compareHash(MyTextEvent remoteEvent) {

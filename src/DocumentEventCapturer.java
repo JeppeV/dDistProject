@@ -6,12 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * This class captures and remembers the text events of the given document on
- * which it is put as a filter. Normally a filter is used to put restrictions
- * on what can be written in a buffer. In out case we just use it to see all
- * the events and make a copy.
- *
- * @author Jesper Buus Nielsen
+ * This class is used on the clients text area to be able to capture events and send them to the server.
+ * This only happens, however, if the boolean value 'enabled' is true.
+ * This flag is used to indicate whether the edits in the text area are to be sent to the server or not.
  */
 public class DocumentEventCapturer extends DocumentFilter {
 

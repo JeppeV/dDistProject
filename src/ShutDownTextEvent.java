@@ -9,10 +9,10 @@
  * This is an indication to the Sender, that it should keep its socket open, yet terminate the run() method.
  * The TextEventReceiver of the other peer receives this value and reads the boolean value.
  * If it is false, it will keep its socket open, change the boolean value to true, and send the ShutDownTextEvent
- * directly to the other peer's TextEventReceiver, using a shared reference to the DocumentEventCapturer.
- * The other peer's TextEventSender takes the element from the queue, sends it back to the first peer,
+ * directly to the other peer's TextEventSender.
+ * The other peer's TextEventSender takes the element from its queue, sends it back to the first peer,
  * reads the boolean value as true and uses this as an indication that it should terminate and close the socket.
- * Lastly, the first peer's TextEventReceiver receive the ShutDownTextEvent, reads the boolean value as true
+ * Lastly, the first peer's TextEventReceiver receives the ShutDownTextEvent, reads the boolean value as true
  * which prompts the run() method to close the socket and return.
  */
 public class ShutDownTextEvent extends MyTextEvent {

@@ -111,12 +111,6 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * This method is called if this peer is supposed to act as a client.
-     * Initiates threads to handle sending and receiving text events to and from the server.
-     *
-     * @param socket the socket representing the connection to the server
-     */
-    /**
-     * This methid is called if this peer is supposed to act as a client.
      * Initiates threads to handle sending and receiving text events to and from the server
      * @param socket the socket representing the connection the server
      * @return the DisconnectHandler to be used for disconnecting, when acting as a client.

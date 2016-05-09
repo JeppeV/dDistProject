@@ -5,8 +5,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class EventReplayer implements Runnable {
-
-    private int reset, normal;
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
     private DocumentEventCapturer dec;
@@ -34,14 +32,10 @@ public class EventReplayer implements Runnable {
                             if (localEvent == null) {
                                 area.insert(tie.getText(), tie.getOffset());
                             }
-                            normal++;
                             localBuffer.remove(tie);
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
-                /* We catch all axceptions, as an uncaught exception would make the
-                 * EDT unwind, which is now healthy.
-                 */
                         }
                     });
                 } else if (mte instanceof TextRemoveEvent) {
@@ -53,7 +47,6 @@ public class EventReplayer implements Runnable {
                             if (localEvent == null) {
                                 area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             }
-                            normal++;
                             localBuffer.remove(tre);
                             dec.enable();
                         } catch (Exception e) {
@@ -68,17 +61,12 @@ public class EventReplayer implements Runnable {
                             int caretPosition = area.getCaretPosition();
                             area.replaceRange(tse.getAreaText(), 0, area.getText().length());
                             area.getCaret().setDot(caretPosition);
-                            System.out.println("Text reset");
-                            reset++;
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     });
                 }
-                System.out.println("______________________________");
-                System.out.println("Normal inserts: " + normal);
-                System.out.println("Resets: " + reset);
 
             } catch (Exception e) {
                 wasInterrupted = true;

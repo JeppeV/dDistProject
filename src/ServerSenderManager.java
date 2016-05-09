@@ -4,7 +4,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by Jeppe Vinberg on 30-04-2016.
  *
- * The resposibility of this class is to manage several
+ * The resposibility of this class is to manage the sender theads for several clients.
+ * If an event is put onto the events queue, this runnable will distribute this event to each
+ * of its associated TextEventSenders.
+ * When a new TextEventSender is added, all of the servers text area is sent to the client as the first event.
  */
 public class ServerSenderManager implements Runnable {
 
