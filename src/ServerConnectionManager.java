@@ -22,6 +22,7 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
     private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap; // A mapping between events and the senders to the authors of those events
     private ServerSenderManager serverSenderManager; // A thread for managing the Sender threads of several clients
     private JTextArea serverTextArea; // The authorative server text area
+    private LamportClock serverClock;
 
     public ServerConnectionManager(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
@@ -29,8 +30,9 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.senderMap = new ConcurrentHashMap<>();
         this.serverTextArea = new JTextArea();
-        this.serverSenderManager = new ServerSenderManager(outgoingEvents);
-        ServerEventReplayer serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap);
+        this.serverClock = new LamportClock();
+        this.serverSenderManager = new ServerSenderManager(outgoingEvents, serverClock);
+        ServerEventReplayer serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap, serverClock);
         new Thread(serverEventReplayer).start();
         new Thread(serverSenderManager).start();
     }

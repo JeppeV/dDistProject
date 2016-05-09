@@ -1,5 +1,3 @@
-import sun.awt.image.ImageWatched;
-
 import javax.swing.*;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,12 +19,14 @@ public class ServerEventReplayer implements Runnable {
     private JTextArea serverTextArea;
     private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
     private LinkedList<LinkedList<MyTextEvent>> log;
+    private LamportClock serverClock;
 
-    public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
+    public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap, LamportClock serverClock) {
         this.incomingQueue = incomingQueue;
         this.outgoingQueue = outgoingQueue;
         this.serverTextArea = serverTextArea;
         this.senderMap = senderMap;
+        this.serverClock = serverClock;
         this.log = new LinkedList<>();
 
     }
@@ -36,6 +36,7 @@ public class ServerEventReplayer implements Runnable {
         while (!wasInterrupted) {
             try {
                 MyTextEvent mte = incomingQueue.take();
+                serverClock.processTimestamp(mte.getTimestamp());
                 TextEventSender sender = senderMap.get(mte);
                 mte = adjustOffset(mte);
                 if (mte instanceof TextInsertEvent) {

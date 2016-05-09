@@ -12,10 +12,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ServerSenderManager implements Runnable {
 
     private LinkedBlockingQueue<MyTextEvent> events;
+    private LamportClock serverClock;
     private LinkedBlockingQueue<TextEventSender> senders;
 
-    public ServerSenderManager(LinkedBlockingQueue<MyTextEvent> events) {
+    public ServerSenderManager(LinkedBlockingQueue<MyTextEvent> events, LamportClock serverClock) {
         this.events = events;
+        this.serverClock = serverClock;
         this.senders = new LinkedBlockingQueue<>();
     }
 
@@ -36,7 +38,7 @@ public class ServerSenderManager implements Runnable {
 
     public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException {
         //send all of text area to new client
-        sender.put(new TextInsertEvent("", -1, 0, 0, area.getText()));
+        sender.put(new TextInsertEvent("", serverClock.getTime(), 0, 0, area.getText()));
         senders.put(sender);
     }
 
