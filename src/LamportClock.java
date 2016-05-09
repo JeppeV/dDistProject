@@ -6,7 +6,7 @@ public class LamportClock {
     private int time;
 
     public LamportClock(){
-        this.time = 0;
+        this.time = -1;
     }
 
     public int getTime(){
@@ -14,10 +14,10 @@ public class LamportClock {
     }
 
     public int generateTimestamp(){
-        return time++;
+        return ++time;
     }
 
     public void processTimestamp(int timestamp){
-        if(timestamp > -1)time = Math.max(time, timestamp) + 1;
+        time = Math.max(time, timestamp);
     }
 }
