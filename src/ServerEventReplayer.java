@@ -88,7 +88,7 @@ public class ServerEventReplayer implements Runnable {
     private MyTextEvent adjustOffset(MyTextEvent event) {
         LinkedList<MyTextEvent> recentEvents;
         int offsetAdjustment = 0;
-        if(event.getTimestamp() < log.size()){
+        if(event.getTimestamp() - 1 < log.size()){
             recentEvents = log.get(event.getTimestamp());
             for(MyTextEvent e : recentEvents){
                 if(e.getOffset() < event.getOffset()){

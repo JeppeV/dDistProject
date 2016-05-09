@@ -14,10 +14,10 @@ public class LamportClock {
     }
 
     public int generateTimestamp(){
-        return time++;
+        return ++time;
     }
 
     public void processTimestamp(int timestamp){
-        if(timestamp >= 0) time = Math.max(time, timestamp) + 1;
+        time = Math.max(time, timestamp);
     }
 }
