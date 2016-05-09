@@ -18,6 +18,6 @@ public class LamportClock {
     }
 
     public void processTimestamp(int timestamp){
-        time = Math.max(time, timestamp);
+        if(timestamp >= 0) time = Math.max(time, timestamp) + 1;
     }
 }
