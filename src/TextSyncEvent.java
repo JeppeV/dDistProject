@@ -10,8 +10,8 @@ public class TextSyncEvent extends MyTextEvent {
     static final long serialVersionUID = 3L;
     private String areaText;
 
-    public TextSyncEvent(String areaText) {
-        super("", -1, 0, -1);
+    public TextSyncEvent(int offset, String areaText) {
+        super("", -1, 0, offset);
         this.areaText = areaText;
     }
 

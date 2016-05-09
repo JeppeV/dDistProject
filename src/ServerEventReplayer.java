@@ -43,7 +43,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        syncSender(tie, sender);
+                        syncSender(tie.getOffset() + tie.getText().length(), tie, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -53,7 +53,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        syncSender(tre, sender);
+                        syncSender(tre.getOffset(), tre, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -69,9 +69,9 @@ public class ServerEventReplayer implements Runnable {
      * If the client's text area is not the same as that on the server, send a TextSyncEvent to the client.
      * @param event the event sent by a client
      */
-    private void syncSender(MyTextEvent event, TextEventSender sender) throws InterruptedException {
+    private void syncSender(int offset, MyTextEvent event, TextEventSender sender) throws InterruptedException {
         if (!compareHash(event)) {
-            sender.put(new TextSyncEvent(serverTextArea.getText()));
+            sender.put(new TextSyncEvent(offset, serverTextArea.getText()));
         }
         senderMap.remove(event);
     }
