@@ -72,7 +72,7 @@ public class ServerEventReplayer implements Runnable {
      */
     private void syncSender(int offset, MyTextEvent event, TextEventSender sender) throws InterruptedException {
         if (!compareHash(event)) {
-            sender.put(new TextSyncEvent(event.getTimestamp(), offset, serverTextArea.getText()));
+            sender.put(new TextSyncEvent(-1, offset, serverTextArea.getText()));
         }
         senderMap.remove(event);
     }
