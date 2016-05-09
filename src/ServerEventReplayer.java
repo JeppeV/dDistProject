@@ -36,7 +36,7 @@ public class ServerEventReplayer implements Runnable {
         while (!wasInterrupted) {
             try {
                 MyTextEvent mte = incomingQueue.take();
-                serverClock.processTimestamp(mte.getTimestamp());
+                //serverClock.processTimestamp(mte.getTimestamp());
                 TextEventSender sender = senderMap.get(mte);
                 mte = adjustOffset(mte);
                 if (mte instanceof TextInsertEvent) {
@@ -108,6 +108,7 @@ public class ServerEventReplayer implements Runnable {
             recentEvents = new LinkedList<>();
             log.add(event.getTimestamp(), recentEvents);
         }
+        System.out.println("Server finished processing event with timestamp: " + event.getTimestamp());
         recentEvents.add(event);
 
         return event;
