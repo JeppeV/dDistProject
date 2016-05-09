@@ -171,8 +171,8 @@ public class DistributedTextEditor extends JFrame {
             System.out.println("I'm server");
             startAsClient(address, "" + PORT_NUMBER);
         }
+        
         return dh;
-
     }
 
     private DisconnectHandler startAsClient(String ipAddress, String port){
