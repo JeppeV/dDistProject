@@ -19,13 +19,17 @@ public class DocumentEventCapturer extends DocumentFilter {
     private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
     private JTextArea textArea;
 
-    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer, JTextArea textArea) {
+    private LamportClock lamportClock;
+
+    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer, JTextArea textArea, LamportClock lamportClock) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.currentTimestamp = 0;
         this.IPAddress = IPAddress;
         this.localBuffer = localBuffer;
         this.textArea = textArea;
+
+        this.lamportClock = lamportClock;
 
     }
 
@@ -52,7 +56,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 
         if (enabled) {
             super.insertString(fb, offset, str, a);
-            TextInsertEvent event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
+            TextInsertEvent event = new TextInsertEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -66,7 +70,7 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
         if (enabled) {
             super.remove(fb, offset, length);
-            TextRemoveEvent event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
+            TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, length);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
@@ -84,12 +88,12 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             if (length > 0) {
                 super.remove(fb, offset, length);
-                event = new TextRemoveEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, length);
+                event = new TextRemoveEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, length);
                 localBuffer.put(event, event);
                 eventHistory.add(event);
             }
             super.insertString(fb, offset, str, a);
-            event = new TextInsertEvent(IPAddress, currentTimestamp++, getTextAreaHash(), offset, str);
+            event = new TextInsertEvent(IPAddress, lamportClock.generateTimestamp(), getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 

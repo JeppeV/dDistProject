@@ -28,6 +28,7 @@ public class DistributedTextEditor extends JFrame {
 
     private String currentFile = "Untitled";
     private boolean changed = false;
+    private LamportClock lamportClock;
     private DocumentEventCapturer dec;
 
     public DistributedTextEditor() {
@@ -89,7 +90,8 @@ public class DistributedTextEditor extends JFrame {
      */
     private void init() {
         ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
-        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1);
+        lamportClock = new LamportClock();
+        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1, lamportClock);
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
@@ -119,7 +121,7 @@ public class DistributedTextEditor extends JFrame {
         //clear the document event capturer queue
         dec.clear();
         TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, lamportClock);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
@@ -171,7 +173,7 @@ public class DistributedTextEditor extends JFrame {
             System.out.println("I'm server");
             startAsClient(address, "" + PORT_NUMBER);
         }
-        
+
         return dh;
     }
 

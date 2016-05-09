@@ -14,5 +14,9 @@ public class TextInsertEvent extends MyTextEvent {
     public String getText() {
         return text;
     }
+
+    public int getLength() {
+        return text.length();
+    }
 }
 

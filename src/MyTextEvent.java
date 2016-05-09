@@ -3,7 +3,7 @@ import java.io.Serializable;
 /**
  * @author Jesper Buus Nielsen
  */
-public class MyTextEvent implements Serializable {
+public abstract class MyTextEvent implements Serializable {
 
     static final long serialVersionUID = 0L;
     private int offset;
@@ -21,6 +21,16 @@ public class MyTextEvent implements Serializable {
     public int getOffset() {
         return offset;
     }
+
+    public void setOffset(int offset){
+        this.offset = offset;
+    }
+
+    public int getTimestamp(){
+        return timestamp;
+    }
+
+    public abstract int getLength();
 
     public int getTextHash() {
         return textHash;

@@ -1,4 +1,7 @@
+import sun.awt.image.ImageWatched;
+
 import javax.swing.*;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -17,12 +20,14 @@ public class ServerEventReplayer implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> outgoingQueue;
     private JTextArea serverTextArea;
     private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
+    private LinkedList<LinkedList<MyTextEvent>> log;
 
     public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
         this.incomingQueue = incomingQueue;
         this.outgoingQueue = outgoingQueue;
         this.serverTextArea = serverTextArea;
         this.senderMap = senderMap;
+        this.log = new LinkedList<>();
 
     }
 
@@ -31,12 +36,14 @@ public class ServerEventReplayer implements Runnable {
         while (!wasInterrupted) {
             try {
                 MyTextEvent mte = incomingQueue.take();
+                TextEventSender sender = senderMap.get(mte);
+                mte = adjustOffset(mte);
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     try {
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        syncSender(tie);
+                        syncSender(tie, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -46,7 +53,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        syncSender(tre);
+                        syncSender(tre, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -62,9 +69,8 @@ public class ServerEventReplayer implements Runnable {
      * If the client's text area is not the same as that on the server, send a TextSyncEvent to the client.
      * @param event the event sent by a client
      */
-    private void syncSender(MyTextEvent event) throws InterruptedException{
+    private void syncSender(MyTextEvent event, TextEventSender sender) throws InterruptedException {
         if (!compareHash(event)) {
-            TextEventSender sender = senderMap.get(event);
             sender.put(new TextSyncEvent(serverTextArea.getText()));
         }
         senderMap.remove(event);
@@ -76,6 +82,32 @@ public class ServerEventReplayer implements Runnable {
         return localHash == remoteHash;
 
 
+    }
+
+    private MyTextEvent adjustOffset(MyTextEvent event) {
+        LinkedList<MyTextEvent> recentEvents;
+        int offsetAdjustment = 0;
+        if(event.getTimestamp() < log.size()){
+            recentEvents = log.get(event.getTimestamp());
+            for(MyTextEvent e : recentEvents){
+                if(e.getOffset() <= event.getOffset()){
+                    if(e instanceof TextInsertEvent){
+                        offsetAdjustment += e.getLength();
+                    }else if(e instanceof  TextRemoveEvent){
+                        offsetAdjustment -= e.getLength();
+
+                    }
+                }
+
+            }
+            event.setOffset(event.getOffset() + offsetAdjustment);
+        }else{
+            recentEvents = new LinkedList<>();
+            log.add(event.getTimestamp(), recentEvents);
+        }
+        recentEvents.add(event);
+
+        return event;
     }
 
 }
