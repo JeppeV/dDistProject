@@ -3,6 +3,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Jeppe Vinberg on 30-04-2016.
+ *
+ * The resposibility of this class is to manage several 
  */
 public class ServerSenderManager implements Runnable {
 
@@ -27,10 +29,6 @@ public class ServerSenderManager implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public void put(MyTextEvent event) throws InterruptedException {
-        events.put(event);
     }
 
     public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException {

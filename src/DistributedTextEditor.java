@@ -80,6 +80,13 @@ public class DistributedTextEditor extends JFrame {
 
     }
 
+    /**
+     * Initialize the things that are relevant to the client:
+     * A buffer that keeps track of local events
+     * A DocumentEventCapturer to capture local events when entered on the keyboard.
+     * A queue whereon to put new incoming events
+     * An EventReplayer to replay remote events locally.
+     */
     private void initClient() {
         ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
         dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1);
@@ -92,11 +99,10 @@ public class DistributedTextEditor extends JFrame {
 
 
     /**
-     * This method is called if this peer is supposed to act as a server.
+     * This method is called if this peer is supposed to act as as client.
+     * @return the DisconnectHandler to be used for disconnecting, when acting as a server.
      */
     private DisconnectHandler initServerThreads() {
-        //clear the document event capturer queue
-        dec.clear();
         ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
@@ -108,6 +114,12 @@ public class DistributedTextEditor extends JFrame {
      * Initiates threads to handle sending and receiving text events to and from the server.
      *
      * @param socket the socket representing the connection to the server
+     */
+    /**
+     * This methid is called if this peer is supposed to act as a client.
+     * Initiates threads to handle sending and receiving text events to and from the server
+     * @param socket the socket representing the connection the server
+     * @return the DisconnectHandler to be used for disconnecting, when acting as a client.
      */
     private DisconnectHandler initClientThreads(Socket socket) {
         //clear the document event capturer queue
@@ -132,7 +144,10 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * When the menu item "Listen" is clicked, we begin listening for incoming connections on the
-     * port indicated by PORT_NUMBER. To setup for acting like a server
+     * port indicated by PORT_NUMBER. A thread running a ServerConnectionManager is started
+     * which handles all actions relevant to acting as a server.
+     * Afterwards, this peer connects to its own server process and
+     * in that way becomes a client as well.
      */
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
@@ -148,12 +163,9 @@ public class DistributedTextEditor extends JFrame {
                 Socket socket = connectToServer(address, "" + PORT_NUMBER);
                 if (socket != null) {
                     initClientThreads(socket);
-                    System.out.println("I'm client");
+                    System.out.println("and I'm client");
                 }
-                //disable irrelevant actions in order to avoid unexpected behaviour
-                Listen.setEnabled(false);
-                Connect.setEnabled(false);
-                Disconnect.setEnabled(true);
+                setMenuItemsConfigurationToConnected();
 
                 changed = false;
                 Save.setEnabled(false);
@@ -226,14 +238,25 @@ public class DistributedTextEditor extends JFrame {
                 disconnectHandler = initClientThreads(socket);
                 System.out.println("I'm client");
                 setTitle("Connection good!");
-                Listen.setEnabled(false);
-                Connect.setEnabled(false);
-                Disconnect.setEnabled(true);
+                setMenuItemsConfigurationToConnected();
             } else {
                 setTitle("Connection failed");
             }
         }
     };
+
+
+    private void setMenuItemsConfigurationToConnected(){
+        Listen.setEnabled(false);
+        Connect.setEnabled(false);
+        Disconnect.setEnabled(true);
+    }
+
+    private void setMenuItemsConfigurationToDisconnected(){
+        Listen.setEnabled(true);
+        Connect.setEnabled(true);
+        Disconnect.setEnabled(false);
+    }
 
     private Socket connectToServer(String serverAddress, String portNumber) {
         Socket socket = null;
@@ -247,9 +270,8 @@ public class DistributedTextEditor extends JFrame {
     }
 
     /**
-     * When the menu item "Disconnect" is clicked, depending on whether this peer is a server or a client,
-     * this method initiates the shutdown procedure, using a ShutDownTextEvent.
-     * The result is that all relevant threads for this peer are shut down.
+     * When pressing disconnect, the disconnect handler for this peer is used in order to
+     * disconnect from the network.
      */
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
@@ -261,10 +283,9 @@ public class DistributedTextEditor extends JFrame {
             } catch (InterruptedException ie) {
                 //TODO
             }
+            setMenuItemsConfigurationToDisconnected();
 
-            Listen.setEnabled(true);
-            Connect.setEnabled(true);
-            Disconnect.setEnabled(false);
+
         }
     };
 

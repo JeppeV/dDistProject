@@ -10,17 +10,18 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * For a peer acting as server, the resposibility of the ServerConnectionManager is to await
  * incoming connections from clients, and delegate a TextEventSender and TextEventCapturer to handle communication with
- * this socket. Instances of TextEventCapturer share a reference to a LinkedBlockingQueue, which allows the EventReplayer
- * to replay text events from several clients.
+ * this socket. It is also responsible for initializing all server related processes and objects.
+ *
  */
 public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
-    private ServerSocket serverSocket;
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents, outgoingEvents;
-    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
-    private ServerEventReplayer serverEventReplayer;
-    private ServerSenderManager serverSenderManager;
-    private JTextArea serverTextArea;
+
+    private ServerSocket serverSocket; // The ServerSocket related to this server
+    private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
+    private LinkedBlockingQueue<MyTextEvent> outgoingEvents; // A shared queue for exchanging outgoing events between threads
+    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap; // A mapping between events and the senders to the authors of those events
+    private ServerSenderManager serverSenderManager; // A thread for managing the Sender threads of several clients
+    private JTextArea serverTextArea; // The authorative server text area
 
     public ServerConnectionManager(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
@@ -28,14 +29,11 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.senderMap = new ConcurrentHashMap<>();
         this.serverTextArea = new JTextArea();
-        this.serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap);
         this.serverSenderManager = new ServerSenderManager(outgoingEvents);
+        ServerEventReplayer serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap);
         new Thread(serverEventReplayer).start();
         new Thread(serverSenderManager).start();
-
-
     }
-
 
     @Override
     public void run() {
