@@ -43,7 +43,7 @@ public abstract class MyTextEvent implements Serializable {
 
         MyTextEvent that = (MyTextEvent) o;
 
-        if (offset != that.offset) return false;
+        if (textHash != that.textHash) return false;
         if (timestamp != that.timestamp) return false;
         return !(ipAddress != null ? !ipAddress.equals(that.ipAddress) : that.ipAddress != null);
 
