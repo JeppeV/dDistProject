@@ -100,6 +100,7 @@ public class ServerEventReplayer implements Runnable {
                 }
 
             }
+            System.out.println("Offset adjusted by: " + offsetAdjustment);
             event.setOffset(event.getOffset() + offsetAdjustment);
         }else{
             recentEvents = new LinkedList<>();
