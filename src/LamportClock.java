@@ -14,7 +14,7 @@ public class LamportClock {
     }
 
     public int generateTimestamp(){
-        return ++time;
+        return time++;
     }
 
     public void processTimestamp(int timestamp){
