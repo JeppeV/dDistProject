@@ -32,7 +32,7 @@ public class DistributedTextEditor extends JFrame {
 
     public DistributedTextEditor() {
 
-        initClient();
+        init();
         clearIpAndPortFieldWhenClicked();
 
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -81,13 +81,13 @@ public class DistributedTextEditor extends JFrame {
     }
 
     /**
-     * Initialize the things that are relevant to the client:
+     * Initialize stuff, that is not GUI related.
      * A buffer that keeps track of local events
      * A DocumentEventCapturer to capture local events when entered on the keyboard.
      * A queue whereon to put new incoming events
      * An EventReplayer to replay remote events locally.
      */
-    private void initClient() {
+    private void init() {
         ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
         dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1);
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
@@ -147,29 +147,43 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             clearTextArea();
-
-            String address = getLocalHostAddress();
-            serverSocket = registerOnPort(PORT_NUMBER);
-            if (serverSocket != null) {
-                setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
-                disconnectHandler = initServerThreads();
-                System.out.println("I'm server");
-                Socket socket = connectToServer(address, "" + PORT_NUMBER);
-                if (socket != null) {
-                    initClientThreads(socket);
-                    System.out.println("and I'm client");
-                }
+            disconnectHandler = startAsServer();
+            if(disconnectHandler != null){
                 setMenuItemsConfigurationToConnected();
-
-                changed = false;
-                Save.setEnabled(false);
-                SaveAs.setEnabled(false);
-            } else {
-                setTitle("Failed to begin listening");
             }
+
+
+            changed = false;
+            Save.setEnabled(false);
+            SaveAs.setEnabled(false);
+
 
         }
     };
+
+    private DisconnectHandler startAsServer(){
+        DisconnectHandler dh = null;
+        String address = getLocalHostAddress();
+        serverSocket = registerOnPort(PORT_NUMBER);
+        if (serverSocket != null) {
+            dh = initServerThreads();
+            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
+            System.out.println("I'm server");
+            startAsClient(address, "" + PORT_NUMBER);
+        }
+        return dh;
+
+    }
+
+    private DisconnectHandler startAsClient(String ipAddress, String port){
+        DisconnectHandler dh = null;
+        Socket socket = connectToServer(ipAddress, "" + PORT_NUMBER);
+        if (socket != null) {
+            dh = initClientThreads(socket);
+            System.out.println("and I'm client");
+        }
+        return dh;
+    }
 
 
     private ServerSocket registerOnPort(int portNumber) {
@@ -227,14 +241,10 @@ public class DistributedTextEditor extends JFrame {
 
             // Connecting to the server
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
-            Socket socket = connectToServer(getIPAddress(), getPortNumber());
-            if (socket != null) {
-                disconnectHandler = initClientThreads(socket);
-                System.out.println("I'm client");
-                setTitle("Connection good!");
+            disconnectHandler = startAsClient(getIPAddress(), getPortNumber());
+            if(disconnectHandler != null){
                 setMenuItemsConfigurationToConnected();
-            } else {
-                setTitle("Connection failed");
+                setTitle("Connected");
             }
         }
     };
