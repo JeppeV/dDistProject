@@ -36,6 +36,7 @@ public class ServerEventReplayer implements Runnable {
         while (!wasInterrupted) {
             try {
                 MyTextEvent mte = incomingQueue.take();
+                System.out.println("Servers says:");
                 serverClock.processTimestamp(mte.getTimestamp());
                 TextEventSender sender = senderMap.get(mte);
                 mte = adjustOffset(mte);
