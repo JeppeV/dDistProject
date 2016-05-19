@@ -3,6 +3,7 @@ build/
 bin/
 TEST-RESULT/
 .idea/
+out/
 
 # Idea #
 ##################

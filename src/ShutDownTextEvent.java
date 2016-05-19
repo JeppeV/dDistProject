@@ -32,4 +32,9 @@ public class ShutDownTextEvent extends MyTextEvent {
     public boolean getShutdown() {
         return shutdown;
     }
+
+    @Override
+    public int getLength(){
+        return 0;
+    }
 }

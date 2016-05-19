@@ -3,7 +3,7 @@ import java.io.Serializable;
 /**
  * @author Jesper Buus Nielsen
  */
-public class MyTextEvent implements Serializable {
+public abstract class MyTextEvent implements Serializable {
 
     static final long serialVersionUID = 0L;
     private int offset;
@@ -29,21 +29,33 @@ public class MyTextEvent implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MyTextEvent)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        MyTextEvent that = (MyTextEvent) o;
+        MyTextEvent event = (MyTextEvent) o;
 
-        if (offset != that.offset) return false;
-        if (timestamp != that.timestamp) return false;
-        return !(ipAddress != null ? !ipAddress.equals(that.ipAddress) : that.ipAddress != null);
+        if (textHash != event.textHash) return false;
+        return ipAddress != null ? ipAddress.equals(event.ipAddress) : event.ipAddress == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = offset;
-        result = 31 * result + timestamp;
-        result = 31 * result + (ipAddress != null ? ipAddress.hashCode() : 0);
+        int result = ipAddress != null ? ipAddress.hashCode() : 0;
+        result = 31 * result + textHash;
         return result;
+    }
+
+    public int getTimestamp(){
+        return timestamp;
+    }
+
+    public void setTimestamp(int timestamp){
+        this.timestamp = timestamp;
+    }
+
+    public abstract int getLength();
+
+    public void setOffset(int offset){
+        this.offset = offset;
     }
 }

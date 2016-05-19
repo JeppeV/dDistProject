@@ -19,5 +19,10 @@ public class TextSyncEvent extends MyTextEvent {
         return areaText;
     }
 
+    @Override
+    public int getLength(){
+        return 0;
+    }
+
 
 }
