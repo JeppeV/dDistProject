@@ -94,7 +94,7 @@ public class DistributedTextEditor extends JFrame {
         dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1, lamportClock);
         ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer, lamportClock);
         Thread ert = new Thread(eventReplayer);
         ert.start();
     }
@@ -121,7 +121,7 @@ public class DistributedTextEditor extends JFrame {
         //clear the document event capturer queue
         dec.clear();
         TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, lamportClock);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();

@@ -9,12 +9,14 @@ public class EventReplayer implements Runnable {
     private JTextArea area;
     private DocumentEventCapturer dec;
     private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
+    private LamportClock lamportClock;
 
-    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer) {
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer, LamportClock lamportClock) {
         this.incomingQueue = incomingQueue;
         this.area = area;
         this.dec = dec;
         this.localBuffer = localBuffer;
+        this.lamportClock = lamportClock;
 
     }
 
@@ -30,6 +32,7 @@ public class EventReplayer implements Runnable {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tie);
                             if (localEvent == null) {
+                                lamportClock.processTimestamp(tie.getTimestamp());
                                 area.insert(tie.getText(), tie.getOffset());
                             }
                             localBuffer.remove(tie);
@@ -45,6 +48,7 @@ public class EventReplayer implements Runnable {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tre);
                             if (localEvent == null) {
+                                lamportClock.processTimestamp(tre.getTimestamp());
                                 area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             }
                             localBuffer.remove(tre);
