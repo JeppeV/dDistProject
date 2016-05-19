@@ -79,8 +79,6 @@ public class ServerEventReplayer implements Runnable {
         int localHash = serverTextArea.getText().hashCode();
         int remoteHash = remoteEvent.getTextHash();
         return localHash == remoteHash;
-
-
     }
 
     private MyTextEvent adjustOffset(MyTextEvent event){
@@ -93,9 +91,9 @@ public class ServerEventReplayer implements Runnable {
                     event.setOffset(event.getOffset() - e.getLength());
                 }
             }
-            event.setTimestamp(event.getTimestamp()+1);
+            event.setTimestamp(event.getTimestamp() + 1);
         }
-        eventLog.put(event.getTimestamp(),event);
+        eventLog.put(event.getTimestamp(), event);
         return event;
     }
 
