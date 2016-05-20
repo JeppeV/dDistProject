@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
@@ -90,7 +89,7 @@ public class DistributedTextEditor extends JFrame {
      */
     private void init() {
         lamportClock = new LamportClock();
-        dec = new DocumentEventCapturer(getLocalHostAddress(), textArea, lamportClock);
+        dec = new DocumentEventCapturer(lamportClock);
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec);

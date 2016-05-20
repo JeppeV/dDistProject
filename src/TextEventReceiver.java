@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -53,7 +52,7 @@ public class TextEventReceiver implements Runnable {
                     }
                     break;
                 } else {
-                    if (lamportClock != null){
+                    if (lamportClock != null) {
                         lamportClock.processTimestamp(textEvent.getTimestamp());
                     }
                     incomingEvents.put(textEvent);
