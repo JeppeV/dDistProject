@@ -42,7 +42,7 @@ public class ServerSenderManager implements Runnable {
 
     public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException {
         //send all of text area to new client
-        sender.put(new TextInsertEvent("", -1, 0, 0, area.getText()));
+        sender.put(new TextInsertEvent("", maxReceivedTimestamp, 0, 0, area.getText()));
         senders.put(sender);
     }
 
