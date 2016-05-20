@@ -45,17 +45,17 @@ public abstract class MyTextEvent implements Serializable {
         return result;
     }
 
-    public int getTimestamp(){
+    public int getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(int timestamp){
+    public void setTimestamp(int timestamp) {
         this.timestamp = timestamp;
     }
 
     public abstract int getLength();
 
-    public void setOffset(int offset){
+    public void setOffset(int offset) {
         this.offset = offset;
     }
 }

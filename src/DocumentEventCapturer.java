@@ -26,7 +26,6 @@ public class DocumentEventCapturer extends DocumentFilter {
         this.localBuffer = localBuffer;
         this.textArea = textArea;
         this.lamportClock = lamportClock;
-
     }
 
     public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
@@ -51,7 +50,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 
         if (enabled) {
-            //super.insertString(fb, offset, str, a);
             TextInsertEvent event = new TextInsertEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
@@ -65,7 +63,6 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
         if (enabled) {
-            //super.remove(fb, offset, length);
             TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
             localBuffer.put(event, event);
             eventHistory.add(event);
@@ -83,13 +80,11 @@ public class DocumentEventCapturer extends DocumentFilter {
         MyTextEvent event;
         if (enabled) {
             if (length > 0) {
-                //super.remove(fb, offset, length);
                 event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
                 localBuffer.put(event, event);
                 eventHistory.add(event);
             }
-            //super.insertString(fb, offset, str, a);
-            event = new TextInsertEvent(IPAddress, lamportClock.getTime()+1, getTextAreaHash(), offset, str);
+            event = new TextInsertEvent(IPAddress, lamportClock.getTime() + 1, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 

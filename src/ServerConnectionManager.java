@@ -11,27 +11,20 @@ import java.util.concurrent.LinkedBlockingQueue;
  * For a peer acting as server, the resposibility of the ServerConnectionManager is to await
  * incoming connections from clients, and delegate a TextEventSender and TextEventCapturer to handle communication with
  * this socket. It is also responsible for initializing all server related processes and objects.
- *
  */
 public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
 
     private ServerSocket serverSocket; // The ServerSocket related to this server
     private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
-    private LinkedBlockingQueue<MyTextEvent> outgoingEvents; // A shared queue for exchanging outgoing events between threads
-    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap; // A mapping between events and the senders to the authors of those events
     private ServerSenderManager serverSenderManager; // A thread for managing the Sender threads of several clients
-    private JTextArea serverTextArea; // The authorative server text area
+    private JTextArea textArea;
 
-    public ServerConnectionManager(ServerSocket serverSocket) {
+    public ServerConnectionManager(ServerSocket serverSocket, JTextArea textArea) {
         this.serverSocket = serverSocket;
+        this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
-        this.outgoingEvents = new LinkedBlockingQueue<>();
-        this.senderMap = new ConcurrentHashMap<>();
-        this.serverTextArea = new JTextArea();
-        this.serverSenderManager = new ServerSenderManager(outgoingEvents);
-        ServerEventReplayer serverEventReplayer = new ServerEventReplayer(incomingEvents, outgoingEvents, serverTextArea, senderMap);
-        new Thread(serverEventReplayer).start();
+        this.serverSenderManager = new ServerSenderManager(incomingEvents);
         new Thread(serverSenderManager).start();
     }
 
@@ -52,13 +45,13 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     private void initClientThreads(Socket socket) {
         TextEventSender sender = new TextEventSender(socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, senderMap);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
         try {
-            serverSenderManager.addSender(sender, serverTextArea);
+            serverSenderManager.addSender(sender, textArea);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -76,6 +69,6 @@ public class ServerConnectionManager implements Runnable, DisconnectHandler {
 
     @Override
     public void disconnect() throws InterruptedException {
-        outgoingEvents.put(new ShutDownTextEvent(false));
+        incomingEvents.put(new ShutDownTextEvent(false));
     }
 }

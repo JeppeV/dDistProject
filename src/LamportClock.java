@@ -1,7 +1,6 @@
-
 /**
-* Created by frederik290 on 19/05/16.
-*/
+ * Created by frederik290 on 19/05/16.
+ */
 
 public class LamportClock {
 
@@ -15,11 +14,7 @@ public class LamportClock {
         return time;
     }
 
-    public int generateTimestamp() {
-        return ++time;
-    }
-
     public void processTimestamp(int timestamp) {
-        time = Math.max(time, timestamp)+1;
+        time = Math.max(time, timestamp) + 1;
     }
 }

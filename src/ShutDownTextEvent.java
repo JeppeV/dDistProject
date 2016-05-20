@@ -34,7 +34,7 @@ public class ShutDownTextEvent extends MyTextEvent {
     }
 
     @Override
-    public int getLength(){
+    public int getLength() {
         return 0;
     }
 }

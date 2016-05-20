@@ -15,7 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DistributedTextEditor extends JFrame {
 
     private static final int PORT_NUMBER = 40103;
-    private JTextArea area1 = new JTextArea(20, 120);
+    private JTextArea textArea = new JTextArea(20, 120);
     private JTextField ipaddress = new JTextField("Insert IP address here");
     private JTextField portNumber = new JTextField("Insert port number here");
 
@@ -36,12 +36,12 @@ public class DistributedTextEditor extends JFrame {
         init();
         clearIpAndPortFieldWhenClicked();
 
-        area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
         JScrollPane scroll1 =
-                new JScrollPane(area1,
+                new JScrollPane(textArea,
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         content.add(scroll1, BorderLayout.CENTER);
@@ -75,7 +75,7 @@ public class DistributedTextEditor extends JFrame {
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
-        area1.addKeyListener(k1);
+        textArea.addKeyListener(k1);
         setTitle("Disconnected");
         setVisible(true);
 
@@ -91,10 +91,10 @@ public class DistributedTextEditor extends JFrame {
     private void init() {
         ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
         this.lamportClock = new LamportClock();
-        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, area1, lamportClock);
-        ((AbstractDocument) area1.getDocument()).setDocumentFilter(dec);
+        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, textArea, lamportClock);
+        ((AbstractDocument) textArea.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, area1, dec, localBuffer);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec, localBuffer);
         Thread ert = new Thread(eventReplayer);
         ert.start();
     }
@@ -102,10 +102,11 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * This method is called if this peer is supposed to act as as client.
+     *
      * @return the DisconnectHandler to be used for disconnecting, when acting as a server.
      */
     private DisconnectHandler initServerThreads() {
-        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket);
+        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, textArea);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
         return connectionManager;
@@ -114,6 +115,7 @@ public class DistributedTextEditor extends JFrame {
     /**
      * This method is called if this peer is supposed to act as a client.
      * Initiates threads to handle sending and receiving text events to and from the server
+     *
      * @param socket the socket representing the connection the server
      * @return the DisconnectHandler to be used for disconnecting, when acting as a client.
      */
@@ -150,7 +152,7 @@ public class DistributedTextEditor extends JFrame {
             saveOld();
             clearTextArea();
             disconnectHandler = startAsServer();
-            if(disconnectHandler != null){
+            if (disconnectHandler != null) {
                 setMenuItemsConfigurationToConnected();
             }
 
@@ -163,7 +165,7 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    private DisconnectHandler startAsServer(){
+    private DisconnectHandler startAsServer() {
         DisconnectHandler dh = null;
         String address = getLocalHostAddress();
         serverSocket = registerOnPort(PORT_NUMBER);
@@ -173,11 +175,11 @@ public class DistributedTextEditor extends JFrame {
             System.out.println("I'm server");
             startAsClient(address, "" + PORT_NUMBER);
         }
-        
+
         return dh;
     }
 
-    private DisconnectHandler startAsClient(String ipAddress, String port){
+    private DisconnectHandler startAsClient(String ipAddress, String port) {
         DisconnectHandler dh = null;
         Socket socket = connectToServer(ipAddress, "" + PORT_NUMBER);
         if (socket != null) {
@@ -224,7 +226,7 @@ public class DistributedTextEditor extends JFrame {
 
     private void clearTextArea() {
         dec.disable();
-        area1.setText("");
+        textArea.setText("");
         dec.enable();
     }
 
@@ -244,7 +246,7 @@ public class DistributedTextEditor extends JFrame {
             // Connecting to the server
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
             disconnectHandler = startAsClient(getIPAddress(), getPortNumber());
-            if(disconnectHandler != null){
+            if (disconnectHandler != null) {
                 setMenuItemsConfigurationToConnected();
                 setTitle("Connected");
             }
@@ -252,13 +254,13 @@ public class DistributedTextEditor extends JFrame {
     };
 
 
-    private void setMenuItemsConfigurationToConnected(){
+    private void setMenuItemsConfigurationToConnected() {
         Listen.setEnabled(false);
         Connect.setEnabled(false);
         Disconnect.setEnabled(true);
     }
 
-    private void setMenuItemsConfigurationToDisconnected(){
+    private void setMenuItemsConfigurationToDisconnected() {
         Listen.setEnabled(true);
         Connect.setEnabled(true);
         Disconnect.setEnabled(false);
@@ -328,7 +330,7 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    ActionMap m = area1.getActionMap();
+    ActionMap m = textArea.getActionMap();
 
     Action Copy = m.get(DefaultEditorKit.copyAction);
     Action Paste = m.get(DefaultEditorKit.pasteAction);
@@ -348,7 +350,7 @@ public class DistributedTextEditor extends JFrame {
     private void saveFile(String fileName) {
         try {
             FileWriter w = new FileWriter(fileName);
-            area1.write(w);
+            textArea.write(w);
             w.close();
             currentFile = fileName;
             changed = false;
@@ -357,7 +359,7 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    private void clearIpAndPortFieldWhenClicked(){
+    private void clearIpAndPortFieldWhenClicked() {
         ipaddress.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
@@ -18,14 +17,12 @@ public class TextEventReceiver implements Runnable {
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private TextEventSender sender;
-    private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
     private LamportClock lamportClock;
 
-    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
+    public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.sender = sender;
-        this.senderMap = senderMap;
         this.lamportClock = null;
     }
 
@@ -33,7 +30,6 @@ public class TextEventReceiver implements Runnable {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.sender = sender;
-        this.senderMap = null;
         this.lamportClock = lamportClock;
     }
 
@@ -57,8 +53,9 @@ public class TextEventReceiver implements Runnable {
                     }
                     break;
                 } else {
-                    if (senderMap != null) senderMap.put(textEvent, sender);
-                    if(lamportClock != null && textEvent.getTimestamp() > -1) lamportClock.processTimestamp(textEvent.getTimestamp());
+                    if (lamportClock != null){
+                        lamportClock.processTimestamp(textEvent.getTimestamp());
+                    }
                     incomingEvents.put(textEvent);
                 }
             }
