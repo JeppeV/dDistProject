@@ -8,14 +8,11 @@ public class EventReplayer implements Runnable {
     private LinkedBlockingQueue<MyTextEvent> incomingQueue;
     private JTextArea area;
     private DocumentEventCapturer dec;
-    private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
 
-    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer) {
+    public EventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, JTextArea area, DocumentEventCapturer dec) {
         this.incomingQueue = incomingQueue;
         this.area = area;
         this.dec = dec;
-        this.localBuffer = localBuffer;
-
     }
 
     public void run() {
@@ -28,11 +25,7 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            MyTextEvent localEvent = localBuffer.get(tie);
-                            //if (localEvent == null) {
                             area.insert(tie.getText(), tie.getOffset());
-                            //}
-                            localBuffer.remove(tie);
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -43,11 +36,7 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-                            MyTextEvent localEvent = localBuffer.get(tre);
-                            //if (localEvent == null) {
                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
-                            //}
-                            localBuffer.remove(tre);
                             dec.enable();
                         } catch (Exception e) {
                             e.printStackTrace();

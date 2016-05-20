@@ -89,12 +89,11 @@ public class DistributedTextEditor extends JFrame {
      * An EventReplayer to replay remote events locally.
      */
     private void init() {
-        ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer = new ConcurrentHashMap<>();
-        this.lamportClock = new LamportClock();
-        dec = new DocumentEventCapturer(getLocalHostAddress(), localBuffer, textArea, lamportClock);
+        lamportClock = new LamportClock();
+        dec = new DocumentEventCapturer(getLocalHostAddress(), textArea, lamportClock);
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec, localBuffer);
+        EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec);
         Thread ert = new Thread(eventReplayer);
         ert.start();
     }

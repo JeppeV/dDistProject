@@ -15,15 +15,13 @@ public class DocumentEventCapturer extends DocumentFilter {
     private boolean enabled;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
     private String IPAddress;
-    private ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer;
     private JTextArea textArea;
     private LamportClock lamportClock;
 
-    public DocumentEventCapturer(String IPAddress, ConcurrentHashMap<MyTextEvent, MyTextEvent> localBuffer, JTextArea textArea, LamportClock lamportClock) {
+    public DocumentEventCapturer(String IPAddress, JTextArea textArea, LamportClock lamportClock) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
         this.IPAddress = IPAddress;
-        this.localBuffer = localBuffer;
         this.textArea = textArea;
         this.lamportClock = lamportClock;
     }
@@ -51,7 +49,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
         if (enabled) {
             TextInsertEvent event = new TextInsertEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, str);
-            localBuffer.put(event, event);
             eventHistory.add(event);
 
         } else {
@@ -64,7 +61,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
         if (enabled) {
             TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
-            localBuffer.put(event, event);
             eventHistory.add(event);
 
         } else {
@@ -81,11 +77,9 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             if (length > 0) {
                 event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
-                localBuffer.put(event, event);
                 eventHistory.add(event);
             }
             event = new TextInsertEvent(IPAddress, lamportClock.getTime() + 1, getTextAreaHash(), offset, str);
-            localBuffer.put(event, event);
             eventHistory.add(event);
 
         } else {
