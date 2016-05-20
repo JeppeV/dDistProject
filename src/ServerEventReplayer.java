@@ -43,9 +43,10 @@ public class ServerEventReplayer implements Runnable {
                 if (mte instanceof TextInsertEvent) {
                     final TextInsertEvent tie = (TextInsertEvent) mte;
                     try {
+                        syncSender(tie, sender);
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        syncSender(tie, sender);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -53,9 +54,9 @@ public class ServerEventReplayer implements Runnable {
                 } else if (mte instanceof TextRemoveEvent) {
                     final TextRemoveEvent tre = (TextRemoveEvent) mte;
                     try {
+                        syncSender(tre, sender);
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        syncSender(tre, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
