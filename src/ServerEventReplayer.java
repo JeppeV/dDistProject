@@ -19,6 +19,7 @@ public class ServerEventReplayer implements Runnable {
     private JTextArea serverTextArea;
     private ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap;
     private HashMap<Integer,MyTextEvent> eventLog;
+    private int maxReceivedTimestamp;
 
     public ServerEventReplayer(LinkedBlockingQueue<MyTextEvent> incomingQueue, LinkedBlockingQueue<MyTextEvent> outgoingQueue, JTextArea serverTextArea, ConcurrentHashMap<MyTextEvent, TextEventSender> senderMap) {
         this.incomingQueue = incomingQueue;
@@ -26,6 +27,7 @@ public class ServerEventReplayer implements Runnable {
         this.serverTextArea = serverTextArea;
         this.senderMap = senderMap;
         this.eventLog = new HashMap<>();
+        this.maxReceivedTimestamp = -1;
 
 
     }
@@ -83,18 +85,24 @@ public class ServerEventReplayer implements Runnable {
 
     private MyTextEvent adjustOffset(MyTextEvent event){
         MyTextEvent e;
-        while ((e = eventLog.get(event.getTimestamp())) != null){
-            System.out.println("Event with timestamp: " + event.getTimestamp() + " exists in queue.");
-            if(e.getOffset() <= event.getOffset()){
-                if(e instanceof TextInsertEvent){
-                    event.setOffset(event.getOffset() + e.getLength());
-                } else if(e instanceof TextRemoveEvent) {
-                    event.setOffset(event.getOffset() - e.getLength());
+        while ((e = eventLog.get(event.getTimestamp())) != null || (event.getTimestamp() < maxReceivedTimestamp)){
+
+            if(e != null) {
+                System.out.println("Event with timestamp: " + event.getTimestamp() + " exists in queue.");
+                if (e.getOffset() <= event.getOffset()) {
+                    if (e instanceof TextInsertEvent) {
+                        event.setOffset(event.getOffset() + e.getLength());
+                    } else if (e instanceof TextRemoveEvent) {
+                        event.setOffset(event.getOffset() - e.getLength());
+                    }
                 }
+            }else{
+                System.out.println("INCREMENTING TIMESTAMP TO REACH MAXTIMESTAMP, WHICH IS: " + maxReceivedTimestamp);
             }
             event.setTimestamp(event.getTimestamp() + 1);
         }
         eventLog.put(event.getTimestamp(), event);
+        maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
         System.out.println("Inserted event with timestamp: " + event.getTimestamp());
         return event;
     }
