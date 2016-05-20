@@ -58,7 +58,7 @@ public class TextEventReceiver implements Runnable {
                     break;
                 } else {
                     if (senderMap != null) senderMap.put(textEvent, sender);
-                    if(lamportClock != null) lamportClock.processTimestamp(textEvent.getTimestamp());
+                    if(lamportClock != null && textEvent.getTimestamp() > -1) lamportClock.processTimestamp(textEvent.getTimestamp());
                     incomingEvents.put(textEvent);
                 }
             }

@@ -84,6 +84,7 @@ public class ServerEventReplayer implements Runnable {
     private MyTextEvent adjustOffset(MyTextEvent event){
         MyTextEvent e;
         while ((e = eventLog.get(event.getTimestamp())) != null){
+            System.out.println("Event with timestamp: " + event.getTimestamp() + " exists in queue.");
             if(e.getOffset() <= event.getOffset()){
                 if(e instanceof TextInsertEvent){
                     event.setOffset(event.getOffset() + e.getLength());
@@ -94,6 +95,7 @@ public class ServerEventReplayer implements Runnable {
             event.setTimestamp(event.getTimestamp() + 1);
         }
         eventLog.put(event.getTimestamp(), event);
+        System.out.println("Inserted event with timestamp: " + event.getTimestamp());
         return event;
     }
 
