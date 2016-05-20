@@ -58,7 +58,7 @@ public class ServerSenderManager implements Runnable {
                     if (e instanceof TextInsertEvent) {
                         event.setOffset(event.getOffset() + e.getLength());
                     } else if (e instanceof TextRemoveEvent) {
-                        event.setOffset(event.getOffset() + e.getLength());
+                        event.setOffset(event.getOffset() - e.getLength());
                     }
                 }
             } else {
