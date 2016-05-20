@@ -57,11 +57,13 @@ public class EventReplayer implements Runnable {
                     final TextSyncEvent tse = (TextSyncEvent) mte;
                     EventQueue.invokeLater(() -> {
                         try {
+                            /*
                             dec.disable();
                             int caretPosition = area.getCaretPosition();
                             area.replaceRange(tse.getAreaText(), 0, area.getText().length());
                             area.getCaret().setDot(caretPosition);
                             dec.enable();
+                            */
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
