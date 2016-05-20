@@ -45,7 +45,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        syncSender(tie, sender);
+                        //syncSender(tie, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -55,7 +55,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                        syncSender(tre, sender);
+                       // syncSender(tre, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -85,6 +85,8 @@ public class ServerEventReplayer implements Runnable {
 
     private MyTextEvent adjustOffset(MyTextEvent event){
         MyTextEvent e;
+        System.out.println("______________________________________");
+        System.out.println("Received event with timestamp: " + event.getTimestamp());
         while ((e = eventLog.get(event.getTimestamp())) != null || (event.getTimestamp() < maxReceivedTimestamp)){
 
             if(e != null) {
@@ -97,13 +99,14 @@ public class ServerEventReplayer implements Runnable {
                     }
                 }
             }else{
-                System.out.println("INCREMENTING TIMESTAMP TO REACH MAXTIMESTAMP, WHICH IS: " + maxReceivedTimestamp);
+                System.out.println("Incrementing timestamp: " + event.getTimestamp() + ", to each max timestamp: " + maxReceivedTimestamp);
             }
             event.setTimestamp(event.getTimestamp() + 1);
         }
         eventLog.put(event.getTimestamp(), event);
         maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
         System.out.println("Inserted event with timestamp: " + event.getTimestamp());
+        System.out.println("______________________________________");
         return event;
     }
 

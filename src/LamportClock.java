@@ -16,7 +16,6 @@ public class LamportClock {
     }
 
     public int generateTimestamp() {
-        System.out.println("Sent event with timestamp: " + (time + 1) );
         return ++time;
     }
 
