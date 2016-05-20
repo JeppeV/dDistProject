@@ -45,7 +45,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.insert(tie.getText(), tie.getOffset());
                         outgoingQueue.put(tie);
-                        //syncSender(tie, sender);
+                        syncSender(tie, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -55,7 +55,7 @@ public class ServerEventReplayer implements Runnable {
                     try {
                         serverTextArea.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                         outgoingQueue.put(tre);
-                       // syncSender(tre, sender);
+                        syncSender(tre, sender);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

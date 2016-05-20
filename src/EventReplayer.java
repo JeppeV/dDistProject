@@ -30,7 +30,7 @@ public class EventReplayer implements Runnable {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tie);
                             //if (localEvent == null) {
-                                area.insert(tie.getText(), tie.getOffset());
+                            area.insert(tie.getText(), tie.getOffset());
                             //}
                             localBuffer.remove(tie);
                             dec.enable();
@@ -45,7 +45,7 @@ public class EventReplayer implements Runnable {
                             dec.disable();
                             MyTextEvent localEvent = localBuffer.get(tre);
                             //if (localEvent == null) {
-                                area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                            area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                             //}
                             localBuffer.remove(tre);
                             dec.enable();
