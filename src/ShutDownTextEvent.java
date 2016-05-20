@@ -21,7 +21,7 @@ public class ShutDownTextEvent extends MyTextEvent {
     private boolean shutdown;
 
     public ShutDownTextEvent(boolean shutdown) {
-        super("", -1, 0, 0);
+        super(-1, 0);
         this.shutdown = shutdown;
     }
 

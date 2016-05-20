@@ -14,15 +14,11 @@ public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
     private LinkedBlockingQueue<MyTextEvent> eventHistory;
-    private String IPAddress;
-    private JTextArea textArea;
     private LamportClock lamportClock;
 
-    public DocumentEventCapturer(String IPAddress, JTextArea textArea, LamportClock lamportClock) {
+    public DocumentEventCapturer(LamportClock lamportClock) {
         this.enabled = true;
         this.eventHistory = new LinkedBlockingQueue<>();
-        this.IPAddress = IPAddress;
-        this.textArea = textArea;
         this.lamportClock = lamportClock;
     }
 
@@ -43,45 +39,35 @@ public class DocumentEventCapturer extends DocumentFilter {
     }
 
 
-    public void insertString(FilterBypass fb, int offset,
-            String str, AttributeSet a)
-            throws BadLocationException {
+    public void insertString(FilterBypass fb, int offset, String str, AttributeSet a) throws BadLocationException {
 
         if (enabled) {
-            TextInsertEvent event = new TextInsertEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, str);
+            TextInsertEvent event = new TextInsertEvent(lamportClock.getTime(), offset, str);
             eventHistory.add(event);
-
         } else {
             super.insertString(fb, offset, str, a);
         }
 
     }
 
-    public void remove(FilterBypass fb, int offset, int length)
-            throws BadLocationException {
+    public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
         if (enabled) {
-            System.out.println("RemoveEvent with offset: " + offset + " and length: " + length);
-            TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
+            TextRemoveEvent event = new TextRemoveEvent(lamportClock.getTime(), offset, length);
             eventHistory.add(event);
-
         } else {
             super.remove(fb, offset, length);
         }
 
     }
 
-    public void replace(FilterBypass fb, int offset,
-            int length,
-            String str, AttributeSet a)
-            throws BadLocationException {
+    public void replace(FilterBypass fb, int offset, int length, String str, AttributeSet a) throws BadLocationException {
         MyTextEvent event;
         if (enabled) {
             if (length > 0) {
-
-                event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
+                event = new TextRemoveEvent(lamportClock.getTime(), offset, length);
                 eventHistory.add(event);
             }
-            event = new TextInsertEvent(IPAddress, lamportClock.getTime() + 1, getTextAreaHash(), offset, str);
+            event = new TextInsertEvent(lamportClock.getTime() + 1, offset, str);
             eventHistory.add(event);
 
         } else {
@@ -89,10 +75,6 @@ public class DocumentEventCapturer extends DocumentFilter {
             super.insertString(fb, offset, str, a);
         }
 
-    }
-
-    private int getTextAreaHash() {
-        return textArea.getText().hashCode();
     }
 
 }
