@@ -89,7 +89,7 @@ public class DocumentEventCapturer extends DocumentFilter {
                 eventHistory.add(event);
             }
             //super.insertString(fb, offset, str, a);
-            event = new TextInsertEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, str);
+            event = new TextInsertEvent(IPAddress, lamportClock.getTime()+1, getTextAreaHash(), offset, str);
             localBuffer.put(event, event);
             eventHistory.add(event);
 
