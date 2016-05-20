@@ -60,6 +60,7 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
         if (enabled) {
+            System.out.println("RemoveEvent with offset: " + offset + " and length: " + length);
             TextRemoveEvent event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
             eventHistory.add(event);
 
@@ -76,6 +77,7 @@ public class DocumentEventCapturer extends DocumentFilter {
         MyTextEvent event;
         if (enabled) {
             if (length > 0) {
+
                 event = new TextRemoveEvent(IPAddress, lamportClock.getTime(), getTextAreaHash(), offset, length);
                 eventHistory.add(event);
             }
