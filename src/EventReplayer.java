@@ -41,6 +41,19 @@ public class EventReplayer implements Runnable {
                             e.printStackTrace();
                         }
                     });
+                } else if(mte instanceof InitTextEvent) {
+                    final InitTextEvent ite = (InitTextEvent) mte;
+                    EventQueue.invokeLater(() -> {
+                        try {
+                            dec.disable();
+                            int position = area.getCaret().getDot();
+                            area.replaceRange(ite.getText(), ite.getOffset(), ite.getLength());
+                            area.getCaret().setDot(position);
+                            dec.enable();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
                 }
 
             } catch (Exception e) {
