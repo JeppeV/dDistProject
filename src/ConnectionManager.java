@@ -85,6 +85,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     public void redirectTo(Peer peer){
         initParentConnection(peer.getIPAddress(), peer.getPortNumber());
+        parent = peer;
     }
 
     private Socket connectToServer(String serverAddress, int portNumber) {
