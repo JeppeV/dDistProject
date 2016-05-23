@@ -1,7 +1,10 @@
+import java.io.Serializable;
+
 /**
  * Created by frederik290 on 23/05/16.
  */
 public class RedirectEvent extends MyTextEvent{
+    static final long serialVersionUID = 5L;
 
     private Peer peer;
 
