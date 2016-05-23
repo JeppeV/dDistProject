@@ -122,8 +122,9 @@ public class DistributedTextEditor extends JFrame {
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
         Utility.startRunnable(connectionManager);
-        setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
         startLocalClient();
+        connectionManager.initParentConnection(IPAddress, portNumber);
+        setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
         System.out.println("I am a Peer");
         return connectionManager;
     }

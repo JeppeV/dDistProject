@@ -42,7 +42,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         this.parent = new Peer(IPAddress, remotePort);
         this.senderManager = new SenderManager(outgoingEvents, false);
         new Thread(senderManager).start();
-        initParentConnection(IPAddress, remotePort);
+        //initParentConnection(IPAddress, remotePort);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         }
     }
 
-    private void initParentConnection(String IPAddress, int portNumber) {
+    public void initParentConnection(String IPAddress, int portNumber) {
         Socket rootSocket = Utility.connectToServer(IPAddress, portNumber);
         TextEventSender sender = new TextEventSender(rootSocket, incomingEvents);
         TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, sender, this);
