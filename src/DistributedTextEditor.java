@@ -108,7 +108,7 @@ public class DistributedTextEditor extends JFrame {
 
     private DisconnectHandler startAsRoot() {
         String localAddress = getLocalHostAddress();
-        int localPort = Integer.parseInt(getLocalPortNumber());
+        int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea);
         startRunnable(connectionManager);
         setTitle("I'm listening on: " + localAddress + ":" + localPort);
@@ -117,9 +117,9 @@ public class DistributedTextEditor extends JFrame {
         return connectionManager;
     }
 
-    private DisconnectHandler startAsPeer(String IPAddress, String portNumber) {
+    private DisconnectHandler startAsPeer(String IPAddress, int portNumber) {
         String localAddress = getLocalHostAddress();
-        int localPort = Integer.parseInt(getLocalPortNumber());
+        int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
         startRunnable(connectionManager);
         setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
@@ -161,12 +161,12 @@ public class DistributedTextEditor extends JFrame {
         return ipaddress.getText();
     }
 
-    private String getLocalPortNumber() {
-        return localPortNumber.getText();
+    private int getLocalPortNumber() {
+        return Integer.parseInt(localPortNumber.getText());
     }
 
-    private String getRemotePortNumber() {
-        return remotePortNumber.getText();
+    private int getRemotePortNumber() {
+        return Integer.parseInt(remotePortNumber.getText());
     }
 
     private void clearTextArea() {
@@ -229,10 +229,10 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    private Socket connectToServer(String serverAddress, String portNumber) {
+    private Socket connectToServer(String serverAddress, int portNumber) {
         Socket socket = null;
         try {
-            socket = new Socket(serverAddress, Integer.parseInt(portNumber));
+            socket = new Socket(serverAddress, portNumber);
         } catch (IOException e) {
             e.printStackTrace();
             // TODO
