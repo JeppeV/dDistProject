@@ -138,6 +138,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
             outgoingEvents.put(new ShutDownEvent(false));
         }
         incomingEvents.put(new ShutDownEvent(false));
+        senderManager.clearSenders();
         deregisterOnPort();
+        parent = null;
     }
 }

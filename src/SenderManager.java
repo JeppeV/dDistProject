@@ -53,6 +53,10 @@ public class SenderManager implements Runnable {
         senders.put(sender);
     }
 
+    public void clearSenders() {
+        senders.clear();
+    }
+
     private void adjustMaxReceivedTimestamp(MyTextEvent event){
         maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
     }

@@ -1,3 +1,5 @@
+import com.sun.org.apache.xml.internal.security.Init;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
@@ -65,6 +67,10 @@ public class TextEventReceiver implements Runnable {
                 else {
                     if (lamportClock != null) {
                         lamportClock.processTimestamp(textEvent.getTimestamp());
+                    }
+                    if (textEvent instanceof InitTextEvent){
+                        InitTextEvent e = (InitTextEvent) textEvent;
+                        System.out.println("Received init text event with text: " + e.getText());
                     }
                     incomingEvents.put(textEvent);
                 }
