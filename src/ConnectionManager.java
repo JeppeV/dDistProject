@@ -17,27 +17,30 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private ServerSocket serverSocket; // The ServerSocket related to this server
     private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
-    private ServerSenderManager serverSenderManager; // A thread for managing the Sender threads of several clients
+    private SenderManager senderManager; // A thread for managing the Sender threads of several clients
     private JTextArea textArea;
+    private Peer parent;
 
     public ConnectionManager(int localPort, JTextArea textArea) {
         this.serverSocket = registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = null;
-        this.serverSenderManager = new ServerSenderManager(incomingEvents, true);
-        new Thread(serverSenderManager).start();
+        this.parent = null;
+        this.senderManager = new SenderManager(incomingEvents, true);
+        new Thread(senderManager).start();
 
     }
 
-    public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, String remotePort){
+    public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, int remotePort){
         this.serverSocket = registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = new LinkedBlockingQueue<>();
-        initRootConnection(IPAddress,remotePort);
-        this.serverSenderManager = new ServerSenderManager(outgoingEvents, false);
-        new Thread(serverSenderManager).start();
+        this.parent = new Peer(IPAddress, remotePort);
+        initParentConnection(IPAddress, remotePort);
+        this.senderManager = new SenderManager(outgoingEvents, false);
+        new Thread(senderManager).start();
 
     }
 
@@ -64,26 +67,30 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         senderThread.start();
         receiverThread.start();
         try {
-            serverSenderManager.addSender(sender, textArea);
+            senderManager.addSender(sender, textArea);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void initRootConnection(String IPAddress, String portNumber) {
+    private void initParentConnection(String IPAddress, int portNumber) {
         Socket rootSocket = connectToServer(IPAddress, portNumber);
         TextEventSender sender = new TextEventSender(rootSocket, incomingEvents);
-        TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, sender);
+        TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, sender, this);
         Thread senderThread = new Thread(sender);
         Thread receiverThread = new Thread(receiver);
         senderThread.start();
         receiverThread.start();
     }
 
-    private Socket connectToServer(String serverAddress, String portNumber) {
+    public void redirectTo(Peer peer){
+        initParentConnection(peer.getIPAddress(), peer.getPortNumber());
+    }
+
+    private Socket connectToServer(String serverAddress, int portNumber) {
         Socket socket = null;
         try {
-            socket = new Socket(serverAddress, Integer.parseInt(portNumber));
+            socket = new Socket(serverAddress, portNumber);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -125,6 +132,9 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     @Override
     public void disconnect() throws InterruptedException {
+        if(parent != null){
+            outgoingEvents.put(new RedirectEvent(parent));
+        }
         incomingEvents.put(new ShutDownEvent(false));
         deregisterOnPort();
     }
