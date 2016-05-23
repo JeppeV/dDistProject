@@ -34,8 +34,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         this.serverSocket = serverSocket;
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
-        initRootConnection(IPAddress,portNumber);
         this.outgoingEvents = new LinkedBlockingQueue<>();
+        initRootConnection(IPAddress,portNumber);
         this.serverSenderManager = new ServerSenderManager(outgoingEvents, false);
         new Thread(serverSenderManager).start();
 
