@@ -6,22 +6,24 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Created by Jeppe Vinberg on 30-04-2016.
  * <p>
  * The resposibility of this class is to manage the sender theads for several clients.
- * If an event is put onto the incomingEvents queue, this runnable will distribute this event to each
+ * If an event is put onto the outgoingEvents queue, this runnable will distribute this event to each
  * of its associated TextEventSenders.
  * When a new TextEventSender is added, all of the servers text area is sent to the client as the first event.
  */
 public class ServerSenderManager implements Runnable {
 
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
+    private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
     private LinkedBlockingQueue<TextEventSender> senders;
     private HashMap<Integer, MyTextEvent> eventLog;
     private int maxReceivedTimestamp;
+    private boolean isRoot;
 
-    public ServerSenderManager(LinkedBlockingQueue<MyTextEvent> incomingEvents) {
-        this.incomingEvents = incomingEvents;
+    public ServerSenderManager(LinkedBlockingQueue<MyTextEvent> outgoingEvents, boolean isRoot) {
+        this.outgoingEvents = outgoingEvents;
         this.senders = new LinkedBlockingQueue<>();
         this.eventLog = new HashMap<>();
         this.maxReceivedTimestamp = -1;
+        this.isRoot = isRoot;
     }
 
     @Override
@@ -29,8 +31,10 @@ public class ServerSenderManager implements Runnable {
         MyTextEvent event;
         try {
             while (true) {
-                event = incomingEvents.take();
-                event = adjustOffset(event);
+                event = outgoingEvents.take();
+                if(isRoot){
+                    event = adjustOffset(event);
+                }
                 for (TextEventSender sender : senders) {
                     sender.put(event);
                 }

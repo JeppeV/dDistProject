@@ -104,7 +104,7 @@ public class DistributedTextEditor extends JFrame {
      * @return the DisconnectHandler to be used for disconnecting, when acting as a server.
      */
     private DisconnectHandler initServerThreads() {
-        ServerConnectionManager connectionManager = new ServerConnectionManager(serverSocket, textArea);
+        ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
         return connectionManager;
@@ -140,7 +140,7 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * When the menu item "Listen" is clicked, we begin listening for incoming connections on the
-     * port indicated by PORT_NUMBER. A thread running a ServerConnectionManager is started
+     * port indicated by PORT_NUMBER. A thread running a ConnectionManager is started
      * which handles all actions relevant to acting as a server.
      * Afterwards, this peer connects to its own server process and
      * in that way becomes a client as well.
