@@ -103,7 +103,7 @@ public class DistributedTextEditor extends JFrame {
      *
      * @return the DisconnectHandler to be used for disconnecting, when acting as a server.
      */
-    private DisconnectHandler initServerThreads() {
+    private DisconnectHandler initServerThreads(boolean isRoot) {
         ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea);
         Thread connectionManagerThread = new Thread(connectionManager);
         connectionManagerThread.start();
@@ -149,7 +149,7 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             clearTextArea();
-            disconnectHandler = startAsServer();
+            disconnectHandler = startAsRoot();
             if (disconnectHandler != null) {
                 setMenuItemsConfigurationToConnected();
             }
@@ -163,28 +163,45 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    private DisconnectHandler startAsServer() {
+    private DisconnectHandler startAsPeer(String IPAddress, String portNumber) {
         DisconnectHandler dh = null;
-        String address = getLocalHostAddress();
+        String localAddress = getLocalHostAddress();
         serverSocket = registerOnPort(PORT_NUMBER);
         if (serverSocket != null) {
-            dh = initServerThreads();
-            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
-            System.out.println("I'm server");
-            startAsClient(address, "" + PORT_NUMBER);
+            ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea, IPAddress, portNumber);
+            Thread connectionManagerThread = new Thread(connectionManager);
+            connectionManagerThread.start();
+            dh = connectionManager;
+            setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + PORT_NUMBER);
+            startLocalClient();
         }
 
         return dh;
     }
 
-    private DisconnectHandler startAsClient(String ipAddress, String port) {
+    private DisconnectHandler startAsRoot() {
         DisconnectHandler dh = null;
-        Socket socket = connectToServer(ipAddress, "" + PORT_NUMBER);
-        if (socket != null) {
-            dh = initClientThreads(socket);
-            System.out.println("and I'm client");
+        String address = getLocalHostAddress();
+        serverSocket = registerOnPort(PORT_NUMBER);
+        if (serverSocket != null) {
+            ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea);
+            Thread connectionManagerThread = new Thread(connectionManager);
+            connectionManagerThread.start();
+            dh = connectionManager;
+            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
+            startLocalClient();
         }
+
         return dh;
+    }
+
+
+    private void startLocalClient() {
+        String address = getLocalHostAddress();
+        Socket socket = connectToServer(address, "" + PORT_NUMBER);
+        if (socket != null) {
+            initClientThreads(socket);
+        }
     }
 
 
@@ -243,7 +260,7 @@ public class DistributedTextEditor extends JFrame {
 
             // Connecting to the server
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
-            disconnectHandler = startAsClient(getIPAddress(), getPortNumber());
+            disconnectHandler = startAsPeer(getIPAddress(), getPortNumber());
             if (disconnectHandler != null) {
                 setMenuItemsConfigurationToConnected();
                 setTitle("Connected");
