@@ -13,10 +13,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
 
-    private static final int PORT_NUMBER = 40103;
+    private static final int DEFAULT_PORT_NUMBER = 40103;
     private JTextArea textArea = new JTextArea(20, 120);
-    private JTextField ipaddress = new JTextField("Insert IP address here");
-    private JTextField portNumber = new JTextField("Insert port number here");
+    private JTextField ipaddress = new JTextField("Insert IP address to connect to here");
+    private JTextField remotePortNumber = new JTextField("" + DEFAULT_PORT_NUMBER);
+    private JTextField localPortNumber = new JTextField("" + DEFAULT_PORT_NUMBER);
 
     private DisconnectHandler disconnectHandler;
     private ServerSocket serverSocket;
@@ -46,7 +47,9 @@ public class DistributedTextEditor extends JFrame {
         content.add(scroll1, BorderLayout.CENTER);
 
         content.add(ipaddress, BorderLayout.CENTER);
-        content.add(portNumber, BorderLayout.CENTER);
+        content.add(remotePortNumber, BorderLayout.CENTER);
+        content.add(localPortNumber, BorderLayout.CENTER);
+
 
         JMenuBar JMB = new JMenuBar();
         setJMenuBar(JMB);
@@ -140,7 +143,7 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * When the menu item "Listen" is clicked, we begin listening for incoming connections on the
-     * port indicated by PORT_NUMBER. A thread running a ConnectionManager is started
+     * port indicated by DEFAULT_PORT_NUMBER. A thread running a ConnectionManager is started
      * which handles all actions relevant to acting as a server.
      * Afterwards, this peer connects to its own server process and
      * in that way becomes a client as well.
@@ -158,47 +161,46 @@ public class DistributedTextEditor extends JFrame {
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
-
-
         }
     };
 
-    private DisconnectHandler startAsPeer(String IPAddress, String portNumber) {
-        DisconnectHandler dh = null;
-        String localAddress = getLocalHostAddress();
-        serverSocket = registerOnPort(PORT_NUMBER);
-        if (serverSocket != null) {
-            ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea, IPAddress, portNumber);
-            Thread connectionManagerThread = new Thread(connectionManager);
-            connectionManagerThread.start();
-            dh = connectionManager;
-            setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + PORT_NUMBER);
-            startLocalClient();
-        }
-
-        return dh;
-    }
-
     private DisconnectHandler startAsRoot() {
         DisconnectHandler dh = null;
-        String address = getLocalHostAddress();
-        serverSocket = registerOnPort(PORT_NUMBER);
+        String localAddress = getLocalHostAddress();
+        int localPort = Integer.parseInt(getLocalPortNumber());
+        serverSocket = registerOnPort(localPort);
         if (serverSocket != null) {
             ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea);
             Thread connectionManagerThread = new Thread(connectionManager);
             connectionManagerThread.start();
             dh = connectionManager;
-            setTitle("I'm listening on: " + address + ":" + PORT_NUMBER);
+            setTitle("I'm listening on: " + localAddress + ":" + localPort);
             startLocalClient();
         }
 
         return dh;
     }
 
+    private DisconnectHandler startAsPeer(String IPAddress, String portNumber) {
+        DisconnectHandler dh = null;
+        String localAddress = getLocalHostAddress();
+        int localPort = Integer.parseInt(getLocalPortNumber());
+        serverSocket = registerOnPort(localPort);
+        if (serverSocket != null) {
+            ConnectionManager connectionManager = new ConnectionManager(serverSocket, textArea, IPAddress, portNumber);
+            Thread connectionManagerThread = new Thread(connectionManager);
+            connectionManagerThread.start();
+            dh = connectionManager;
+            setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
+            startLocalClient();
+        }
+
+        return dh;
+    }
 
     private void startLocalClient() {
         String address = getLocalHostAddress();
-        Socket socket = connectToServer(address, "" + PORT_NUMBER);
+        Socket socket = connectToServer(address, getLocalPortNumber());
         if (socket != null) {
             initClientThreads(socket);
         }
@@ -234,9 +236,12 @@ public class DistributedTextEditor extends JFrame {
         return ipaddress.getText();
     }
 
-    private String getPortNumber() {
-        return "40103";
-        //return portNumber.getText();
+    private String getLocalPortNumber() {
+        return localPortNumber.getText();
+    }
+
+    private String getRemotePortNumber() {
+        return remotePortNumber.getText();
     }
 
     private void clearTextArea() {
@@ -248,7 +253,7 @@ public class DistributedTextEditor extends JFrame {
 
     /**
      * When the menu item "Connect" is clicked, the peer acts as a client and attempts to connect the the host
-     * indicated by the ipaddress and portNumber fields
+     * indicated by the ipaddress and localPortNumber fields
      */
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
@@ -259,11 +264,10 @@ public class DistributedTextEditor extends JFrame {
             SaveAs.setEnabled(false);
 
             // Connecting to the server
-            setTitle("Attempting to connect to: " + getIPAddress() + ":" + getPortNumber() + "...");
-            disconnectHandler = startAsPeer(getIPAddress(), getPortNumber());
+            setTitle("Attempting to connect to: " + getIPAddress() + ":" + getRemotePortNumber() + "...");
+            disconnectHandler = startAsPeer(getIPAddress(), getRemotePortNumber());
             if (disconnectHandler != null) {
                 setMenuItemsConfigurationToConnected();
-                setTitle("Connected");
             }
         }
     };
@@ -382,10 +386,10 @@ public class DistributedTextEditor extends JFrame {
             }
         });
 
-        portNumber.addMouseListener(new MouseAdapter() {
+        localPortNumber.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                portNumber.setText("");
+                localPortNumber.setText("");
             }
         });
     }
