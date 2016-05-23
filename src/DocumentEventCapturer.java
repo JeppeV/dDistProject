@@ -24,8 +24,9 @@ public class DocumentEventCapturer extends DocumentFilter {
         return eventHistory;
     }
 
-    public void clear() {
+    public void reset() {
         eventHistory.clear();
+        lamportClock.reset();
     }
 
     public void enable() {

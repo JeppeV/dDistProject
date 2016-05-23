@@ -39,8 +39,8 @@ public class TextEventSender implements Runnable, DisconnectHandler {
             while (true) {
                 textEvent = queue.take();
                 objectOutputStream.writeObject(textEvent);
-                if (textEvent instanceof ShutDownTextEvent) {
-                    shutdown = ((ShutDownTextEvent) textEvent).getShutdown();
+                if (textEvent instanceof ShutDownEvent) {
+                    shutdown = ((ShutDownEvent) textEvent).getShutdown();
                     break;
                 }
             }
@@ -59,6 +59,6 @@ public class TextEventSender implements Runnable, DisconnectHandler {
 
     @Override
     public void disconnect() throws InterruptedException {
-        queue.put(new ShutDownTextEvent(false));
+        queue.put(new ShutDownEvent(false));
     }
 }

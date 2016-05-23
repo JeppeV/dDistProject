@@ -17,4 +17,8 @@ public class LamportClock {
     public void processTimestamp(int timestamp) {
         time = Math.max(time, timestamp) + 1;
     }
+
+    public void reset(){
+        time = 0;
+    }
 }

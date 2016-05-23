@@ -20,8 +20,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private ServerSenderManager serverSenderManager; // A thread for managing the Sender threads of several clients
     private JTextArea textArea;
 
-    public ConnectionManager(ServerSocket serverSocket, JTextArea textArea) {
-        this.serverSocket = serverSocket;
+    public ConnectionManager(int localPort, JTextArea textArea) {
+        this.serverSocket = registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = null;
@@ -30,17 +30,16 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     }
 
-    public ConnectionManager(ServerSocket serverSocket, JTextArea textArea, String IPAddress, String portNumber){
-        this.serverSocket = serverSocket;
+    public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, String remotePort){
+        this.serverSocket = registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = new LinkedBlockingQueue<>();
-        initRootConnection(IPAddress,portNumber);
+        initRootConnection(IPAddress,remotePort);
         this.serverSenderManager = new ServerSenderManager(outgoingEvents, false);
         new Thread(serverSenderManager).start();
 
     }
-
 
     @Override
     public void run() {
@@ -54,6 +53,20 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
                 System.out.println("Connection manager terminated");
                 break;
             }
+        }
+    }
+
+    private void initClientThreads(Socket socket) {
+        TextEventSender sender = new TextEventSender(socket);
+        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
+        Thread senderThread = new Thread(sender);
+        Thread receiverThread = new Thread(receiver);
+        senderThread.start();
+        receiverThread.start();
+        try {
+            serverSenderManager.addSender(sender, textArea);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -77,17 +90,26 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         return socket;
     }
 
-    private void initClientThreads(Socket socket) {
-        TextEventSender sender = new TextEventSender(socket);
-        TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
-        Thread senderThread = new Thread(sender);
-        Thread receiverThread = new Thread(receiver);
-        senderThread.start();
-        receiverThread.start();
+    private ServerSocket registerOnPort(int portNumber) {
+        ServerSocket serverSocket = null;
         try {
-            serverSenderManager.addSender(sender, textArea);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            serverSocket = new ServerSocket(portNumber);
+        } catch (IOException e) {
+            System.err.println("Cannot open server socket on port number" + portNumber);
+            System.err.println(e);
+            System.exit(-1);
+        }
+        return serverSocket;
+    }
+
+    private void deregisterOnPort() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+                serverSocket = null;
+            } catch (IOException e) {
+                System.err.println(e);
+            }
         }
     }
 
@@ -103,6 +125,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     @Override
     public void disconnect() throws InterruptedException {
-        incomingEvents.put(new ShutDownTextEvent(false));
+        incomingEvents.put(new ShutDownEvent(false));
+        deregisterOnPort();
     }
 }
