@@ -134,8 +134,10 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     public void disconnect() throws InterruptedException {
         if(parent != null){
             outgoingEvents.put(new RedirectEvent(parent));
+            outgoingEvents.put(new ShutDownEvent(false));
+        }else{
+            incomingEvents.put(new ShutDownEvent(false));
         }
-        incomingEvents.put(new ShutDownEvent(false));
         deregisterOnPort();
     }
 }
