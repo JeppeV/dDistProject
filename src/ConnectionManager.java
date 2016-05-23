@@ -1,3 +1,6 @@
+import com.sun.corba.se.spi.activation.Server;
+
+import javax.rmi.CORBA.Util;
 import javax.swing.*;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,7 +16,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class ConnectionManager implements Runnable, DisconnectHandler {
 
-
     private ServerSocket serverSocket; // The ServerSocket related to this server
     private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
@@ -22,7 +24,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private Peer parent;
 
     public ConnectionManager(int localPort, JTextArea textArea) {
-        this.serverSocket = registerOnPort(localPort);
+        this.serverSocket = Utility.registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = null;
@@ -33,27 +35,26 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     }
 
     public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, int remotePort){
-        this.serverSocket = registerOnPort(localPort);
+        this.serverSocket = Utility.registerOnPort(localPort);
         this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.parent = new Peer(IPAddress, remotePort);
-        initParentConnection(IPAddress, remotePort);
         this.senderManager = new SenderManager(outgoingEvents, false);
         new Thread(senderManager).start();
-
+        initParentConnection(IPAddress, remotePort);
     }
 
     @Override
     public void run() {
         Socket socket;
         while (true) {
-            socket = waitForConnectionFromClient(serverSocket);
+            socket = Utility.waitForConnectionFromClient(serverSocket);
             if (socket != null) {
                 System.out.println("New connection established to client " + socket);
                 initClientThreads(socket);
             } else {
-                System.out.println("Connection manager terminated");
+                System.out.println("ConnectionManager terminated");
                 break;
             }
         }
@@ -74,7 +75,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     }
 
     private void initParentConnection(String IPAddress, int portNumber) {
-        Socket rootSocket = connectToServer(IPAddress, portNumber);
+        Socket rootSocket = Utility.connectToServer(IPAddress, portNumber);
         TextEventSender sender = new TextEventSender(rootSocket, incomingEvents);
         TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, sender, this);
         Thread senderThread = new Thread(sender);
@@ -88,49 +89,6 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         parent = peer;
     }
 
-    private Socket connectToServer(String serverAddress, int portNumber) {
-        Socket socket = null;
-        try {
-            socket = new Socket(serverAddress, portNumber);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return socket;
-    }
-
-    private ServerSocket registerOnPort(int portNumber) {
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(portNumber);
-        } catch (IOException e) {
-            System.err.println("Cannot open server socket on port number" + portNumber);
-            System.err.println(e);
-            System.exit(-1);
-        }
-        return serverSocket;
-    }
-
-    private void deregisterOnPort() {
-        if (serverSocket != null) {
-            try {
-                serverSocket.close();
-                serverSocket = null;
-            } catch (IOException e) {
-                System.err.println(e);
-            }
-        }
-    }
-
-    private Socket waitForConnectionFromClient(ServerSocket serverSocket) {
-        Socket res = null;
-        try {
-            res = serverSocket.accept();
-        } catch (IOException e) {
-            // We return null on IOExceptions
-        }
-        return res;
-    }
-
     @Override
     public void disconnect() throws InterruptedException {
         if(parent != null){
@@ -139,7 +97,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         }
         incomingEvents.put(new ShutDownEvent(false));
         senderManager.clearSenders();
-        deregisterOnPort();
+        Utility.deregisterOnPort(serverSocket);
+        serverSocket = null;
         parent = null;
     }
 }

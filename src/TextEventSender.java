@@ -39,6 +39,7 @@ public class TextEventSender implements Runnable, DisconnectHandler {
             while (true) {
                 textEvent = queue.take();
                 objectOutputStream.writeObject(textEvent);
+
                 if (textEvent instanceof ShutDownEvent) {
                     shutdown = ((ShutDownEvent) textEvent).getShutdown();
                     break;
@@ -48,7 +49,6 @@ public class TextEventSender implements Runnable, DisconnectHandler {
                 objectOutputStream.close();
             }
 
-            System.out.println("Sender terminated");
 
         } catch (IOException e) {
             //TODO

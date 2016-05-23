@@ -94,7 +94,7 @@ public class DistributedTextEditor extends JFrame {
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(dec);
         incomingEvents = new LinkedBlockingQueue<>();
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec);
-        startRunnable(eventReplayer);
+        Utility.startRunnable(eventReplayer);
     }
 
     /**
@@ -107,55 +107,39 @@ public class DistributedTextEditor extends JFrame {
 
 
     private DisconnectHandler startAsRoot() {
-        String localAddress = getLocalHostAddress();
+        String localAddress = Utility.getLocalHostAddress();
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea);
-        startRunnable(connectionManager);
+        Utility.startRunnable(connectionManager);
         setTitle("I'm listening on: " + localAddress + ":" + localPort);
         startLocalClient();
-
+        System.out.println("I am Root");
         return connectionManager;
     }
 
     private DisconnectHandler startAsPeer(String IPAddress, int portNumber) {
-        String localAddress = getLocalHostAddress();
+        String localAddress = Utility.getLocalHostAddress();
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
-        startRunnable(connectionManager);
+        Utility.startRunnable(connectionManager);
         setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
         startLocalClient();
-
+        System.out.println("I am a Peer");
         return connectionManager;
     }
 
-    private void startRunnable(Runnable runnable){
-        Thread thread = new Thread(runnable);
-        thread.start();
-    }
-
     private void startLocalClient() {
-        String address = getLocalHostAddress();
-        Socket socket = connectToServer(address, getLocalPortNumber());
+        String address = Utility.getLocalHostAddress();
+        Socket socket = Utility.connectToServer(address, getLocalPortNumber());
         if (socket != null) {
             TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
             TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, lamportClock);
-            startRunnable(sender);
-            startRunnable(receiver);
+            Utility.startRunnable(sender);
+            Utility.startRunnable(receiver);
         }
     }
 
-    private String getLocalHostAddress() {
-        String address = null;
-        try {
-            InetAddress localHost = InetAddress.getLocalHost();
-            address = localHost.getHostAddress();
-        } catch (UnknownHostException e) {
-            System.err.println("Cannot resolve Internet address of the local host");
-            System.err.println(e);
-            System.exit(-1);
-        }
-        return address;
-    }
+
 
     private String getIPAddress() {
         return ipaddress.getText();
@@ -229,16 +213,7 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    private Socket connectToServer(String serverAddress, int portNumber) {
-        Socket socket = null;
-        try {
-            socket = new Socket(serverAddress, portNumber);
-        } catch (IOException e) {
-            e.printStackTrace();
-            // TODO
-        }
-        return socket;
-    }
+
 
     Action Save = new AbstractAction("Save") {
         public void actionPerformed(ActionEvent e) {

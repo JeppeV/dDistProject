@@ -1,3 +1,5 @@
+import com.sun.org.apache.xml.internal.security.Init;
+
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,12 +38,20 @@ public class SenderManager implements Runnable {
                 if(isRoot){
                     event = adjustOffset(event);
                 }
+
                 adjustMaxReceivedTimestamp(event);
+                if( event instanceof InitTextEvent){
+                    while(senders.isEmpty()){
+                        Thread.sleep(100);
+                    }
+                }
+
+
                 for (TextEventSender sender : senders) {
                     sender.put(event);
                 }
                 if(event instanceof ShutDownEvent) {
-                    System.out.println("SenderManager terminated");
+                    System.out.println("SenderManager process terminated");
                     break;
                 }
             }
@@ -53,7 +63,6 @@ public class SenderManager implements Runnable {
     public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException {
         //send all of text area to new client
         sender.put(new InitTextEvent(maxReceivedTimestamp, area.getText()));
-        System.out.println("Sent init text event with text: " + area.getText());
         senders.put(sender);
     }
 
