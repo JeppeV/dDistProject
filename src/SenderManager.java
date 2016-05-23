@@ -40,9 +40,9 @@ public class SenderManager implements Runnable {
                 }
 
                 adjustMaxReceivedTimestamp(event);
-                if( event instanceof InitTextEvent){
+                if(event instanceof InitTextEvent){
                     while(senders.isEmpty()){
-                        Thread.sleep(100);
+                        Thread.sleep(50);
                     }
                 }
 
