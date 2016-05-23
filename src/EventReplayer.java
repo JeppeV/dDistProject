@@ -46,7 +46,6 @@ public class EventReplayer implements Runnable {
                     EventQueue.invokeLater(() -> {
                         try {
                             dec.disable();
-
                             int position = area.getCaret().getDot();
                             area.replaceRange(null, 0, area.getText().length());
                             area.insert(ite.getText(), ite.getOffset());

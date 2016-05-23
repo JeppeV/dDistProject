@@ -40,6 +40,10 @@ public class SenderManager implements Runnable {
                 for (TextEventSender sender : senders) {
                     sender.put(event);
                 }
+                if(event instanceof ShutDownEvent) {
+                    System.out.println("SenderManager terminated");
+                    break;
+                }
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
