@@ -47,7 +47,8 @@ public class EventReplayer implements Runnable {
                         try {
                             dec.disable();
                             int position = area.getCaret().getDot();
-                            area.replaceRange(ite.getText(), ite.getOffset(), ite.getLength());
+                            area.replaceRange(null, 0, area.getText().length());
+                            area.insert(ite.getText(), ite.getOffset());
                             area.getCaret().setDot(position);
                             dec.enable();
                         } catch (Exception e) {
