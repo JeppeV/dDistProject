@@ -65,7 +65,7 @@ public class DocumentEventCapturer extends DocumentFilter {
                 event = new TextRemoveEvent(lamportClock.getTime(), offset, length);
                 eventHistory.add(event);
             }
-            event = new TextInsertEvent(lamportClock.getTime() + 1, offset, str);
+            event = new TextInsertEvent(lamportClock.generateTimestamp(), offset, str);
             eventHistory.add(event);
 
         } else {
