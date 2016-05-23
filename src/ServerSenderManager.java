@@ -32,9 +32,11 @@ public class ServerSenderManager implements Runnable {
         try {
             while (true) {
                 event = outgoingEvents.take();
+
                 if(isRoot){
                     event = adjustOffset(event);
                 }
+                adjustMaxReceivedTimestamp(event);
                 for (TextEventSender sender : senders) {
                     sender.put(event);
                 }
@@ -48,6 +50,10 @@ public class ServerSenderManager implements Runnable {
         //send all of text area to new client
         sender.put(new TextInsertEvent(maxReceivedTimestamp, 0, area.getText()));
         senders.put(sender);
+    }
+
+    private void adjustMaxReceivedTimestamp(MyTextEvent event){
+        maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
     }
 
     private MyTextEvent adjustOffset(MyTextEvent event) {
@@ -65,7 +71,6 @@ public class ServerSenderManager implements Runnable {
             event.setTimestamp(event.getTimestamp() + 1);
         }
         eventLog.put(event.getTimestamp(), event);
-        maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
         return event;
     }
 
