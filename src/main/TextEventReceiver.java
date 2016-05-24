@@ -23,15 +23,12 @@ public class TextEventReceiver implements Runnable {
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private TextEventSender sender;
-    private LamportClock lamportClock;
     private ConnectionManager connectionManager;
 
     public TextEventReceiver(Socket socket, LinkedBlockingQueue<MyTextEvent> incomingEvents, TextEventSender sender, ConnectionManager connectionManager) {
         this.socket = socket;
         this.incomingEvents = incomingEvents;
         this.sender = sender;
-        this.lamportClock = null;
-        this.connectionManager = null;
         this.connectionManager = connectionManager;
     }
 
@@ -49,40 +46,24 @@ public class TextEventReceiver implements Runnable {
 
                 if (textEvent instanceof ShutDownEvent) {
                     ShutDownEvent e = (ShutDownEvent) textEvent;
-                    shutdown = e.getShutdown();
-                    if (!shutdown) {
-                        e.setShutdown(true);
-                        //initiate termination of corresponding sender thread
-                        sender.put(e);
-                    }
+                    shutdown = handleShutDownEvent(e);
                     break;
+
                 } else if(textEvent instanceof RedirectEvent){
-                    if(connectionManager != null){
-                        RedirectEvent r = (RedirectEvent) textEvent;
-                        connectionManager.redirectTo(r.getPeer());
-                    }
+                    RedirectEvent e = (RedirectEvent) textEvent;
+                    handleRedirectEvent(e);
+
                 } else if(textEvent instanceof RootAssignEvent) {
-                    if(connectionManager != null) {
-                        RootAssignEvent e = (RootAssignEvent) textEvent;
-                        System.out.println("Received RootAssignEvent, with: " + e.assignIsFinished());
-                        if (!e.assignIsFinished()) {
-                            connectionManager.beginInitAsRoot();
-                        } else if (e.assignIsFinished()) {
-                            connectionManager.finishInitAsRoot(e);
-                        }
-                    }
+                    RootAssignEvent e = (RootAssignEvent) textEvent;
+                    handleRootAssignEvent(e);
+
                 } else if(textEvent instanceof RootAssignAckEvent) {
-                    System.out.println("RootAssignAckEvent received");
                     RootAssignAckEvent e = (RootAssignAckEvent) textEvent;
-                    connectionManager.setNewRoot(e.getPeer());
+                    handleRootAssignAckEvent(e);
                     shutdown = false;
                     break;
-                }
 
-                else {
-                    if (lamportClock != null) {
-                        lamportClock.processTimestamp(textEvent.getTimestamp());
-                    }
+                } else {
                     incomingEvents.put(textEvent);
                 }
             }
@@ -99,4 +80,33 @@ public class TextEventReceiver implements Runnable {
         }
 
     }
+
+    private boolean handleShutDownEvent(ShutDownEvent event) throws InterruptedException {
+        boolean shutdown = event.getShutdown();
+        if (!shutdown) {
+            event.setShutdown(true);
+            //initiate termination of corresponding sender thread
+            sender.put(event);
+        }
+        return shutdown;
+    }
+
+    private void handleRedirectEvent(RedirectEvent event) {
+        connectionManager.redirectTo(event.getPeer());
+    }
+
+    private void handleRootAssignEvent(RootAssignEvent event) {
+        System.out.println("Received RootAssignEvent, with: " + event.assignIsFinished());
+        if (!event.assignIsFinished()) {
+            connectionManager.beginInitAsRoot();
+        } else if (event.assignIsFinished()) {
+            connectionManager.finishInitAsRoot(event);
+        }
+    }
+
+    private void handleRootAssignAckEvent(RootAssignAckEvent event) {
+        System.out.println("RootAssignAckEvent received");
+        connectionManager.setNewRoot(event.getPeer());
+    }
+
 }
