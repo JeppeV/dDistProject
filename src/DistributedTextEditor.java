@@ -1,3 +1,8 @@
+import main.ConnectionManager;
+import main.DisconnectHandler;
+import main.DocumentEventCapturer;
+import main.Utility;
+
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
