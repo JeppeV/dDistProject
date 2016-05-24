@@ -49,10 +49,6 @@ public class TextEventReceiver implements Runnable {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             while (true) {
                 textEvent = (MyTextEvent) objectInputStream.readObject();
-                if(textEvent instanceof InitTextEvent){
-                    InitTextEvent e = (InitTextEvent) textEvent;
-                    System.out.println("Received init event: " + e.getText());
-                }
                 if (textEvent instanceof ShutDownEvent) {
                     ShutDownEvent e = (ShutDownEvent) textEvent;
                     shutdown = e.getShutdown();

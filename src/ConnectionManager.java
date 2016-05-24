@@ -22,27 +22,40 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private SenderManager senderManager; // A thread for managing the Sender threads of several clients
     private JTextArea textArea;
     private Peer parent;
+    private LocalClientHandler localClientHandler;
 
     public ConnectionManager(int localPort, JTextArea textArea) {
-        this.serverSocket = Utility.registerOnPort(localPort);
-        this.textArea = textArea;
-        this.incomingEvents = new LinkedBlockingQueue<>();
+        init(localPort, textArea);
         this.outgoingEvents = null;
         this.parent = null;
         this.senderManager = new SenderManager(incomingEvents, true);
         new Thread(senderManager).start();
+        try {
+            senderManager.addSender(localClientHandler.startLocalClient(), textArea);
+        } catch (InterruptedException e) {
+
+        }
 
     }
 
     public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, int remotePort){
-        this.serverSocket = Utility.registerOnPort(localPort);
-        this.textArea = textArea;
-        this.incomingEvents = new LinkedBlockingQueue<>();
+        init(localPort, textArea);
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.parent = new Peer(IPAddress, remotePort);
         this.senderManager = new SenderManager(outgoingEvents, false);
         new Thread(senderManager).start();
-        //initParentConnection(IPAddress, remotePort);
+        try {
+            senderManager.addSender(localClientHandler.startLocalClient(), textArea);
+        } catch (InterruptedException e) {
+        }
+        initParentConnection(IPAddress, remotePort);
+    }
+
+    private void init(int localPort, JTextArea textArea) {
+        this.serverSocket = Utility.registerOnPort(localPort);
+        this.textArea = textArea;
+        this.incomingEvents = new LinkedBlockingQueue<>();
+        this.localClientHandler = new LocalClientHandler(textArea, incomingEvents);
     }
 
     @Override
@@ -63,10 +76,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private void initClientThreads(Socket socket) {
         TextEventSender sender = new TextEventSender(socket);
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
-        Thread senderThread = new Thread(sender);
-        Thread receiverThread = new Thread(receiver);
-        senderThread.start();
-        receiverThread.start();
+        Utility.startRunnable(sender);
+        Utility.startRunnable(receiver);
         try {
             senderManager.addSender(sender, textArea);
         } catch (InterruptedException e) {
@@ -78,10 +89,8 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         Socket rootSocket = Utility.connectToServer(IPAddress, portNumber);
         TextEventSender sender = new TextEventSender(rootSocket, incomingEvents);
         TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, sender, this);
-        Thread senderThread = new Thread(sender);
-        Thread receiverThread = new Thread(receiver);
-        senderThread.start();
-        receiverThread.start();
+        Utility.startRunnable(sender);
+        Utility.startRunnable(receiver);
     }
 
     public void redirectTo(Peer peer){
@@ -96,7 +105,6 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
             outgoingEvents.put(new ShutDownEvent(false));
         }
         incomingEvents.put(new ShutDownEvent(false));
-        senderManager.clearSenders();
         Utility.deregisterOnPort(serverSocket);
         serverSocket = null;
         parent = null;

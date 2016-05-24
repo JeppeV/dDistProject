@@ -31,7 +31,7 @@ public class DistributedTextEditor extends JFrame {
 
     public DistributedTextEditor() {
 
-        init();
+        //init();
         clearTextFieldsWhenClicked();
 
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -87,7 +87,7 @@ public class DistributedTextEditor extends JFrame {
      * A DocumentEventCapturer to capture local events when entered on the keyboard.
      * A queue whereon to put new incoming events
      * An EventReplayer to replay remote events locally.
-     */
+
     private void init() {
         lamportClock = new LamportClock();
         dec = new DocumentEventCapturer(lamportClock);
@@ -96,6 +96,7 @@ public class DistributedTextEditor extends JFrame {
         EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec);
         Utility.startRunnable(eventReplayer);
     }
+     */
 
     /**
      * When the menu item "Listen" is clicked, we begin listening for incoming connections on the
@@ -112,7 +113,6 @@ public class DistributedTextEditor extends JFrame {
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea);
         Utility.startRunnable(connectionManager);
         setTitle("I'm listening on: " + localAddress + ":" + localPort);
-        startLocalClient();
         System.out.println("I am Root");
         return connectionManager;
     }
@@ -122,23 +122,11 @@ public class DistributedTextEditor extends JFrame {
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
         Utility.startRunnable(connectionManager);
-        startLocalClient();
-        connectionManager.initParentConnection(IPAddress, portNumber);
         setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
         System.out.println("I am a Peer");
         return connectionManager;
     }
 
-    private void startLocalClient() {
-        String address = Utility.getLocalHostAddress();
-        Socket socket = Utility.connectToServer(address, getLocalPortNumber());
-        if (socket != null) {
-            TextEventSender sender = new TextEventSender(socket, dec.getEventHistory());
-            TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, lamportClock);
-            Utility.startRunnable(sender);
-            Utility.startRunnable(receiver);
-        }
-    }
 
 
 
@@ -155,9 +143,7 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void clearTextArea() {
-        dec.disable();
         textArea.setText("");
-        dec.enable();
     }
 
     Action Listen = new AbstractAction("Listen") {
@@ -182,7 +168,6 @@ public class DistributedTextEditor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             clearTextArea();
-            dec.reset();
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);

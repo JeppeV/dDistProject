@@ -15,7 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SenderManager implements Runnable {
 
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
-    private LinkedBlockingQueue<TextEventSender> senders;
+    private LinkedBlockingQueue<EventSender> senders;
     private HashMap<Integer, MyTextEvent> eventLog;
     private int maxReceivedTimestamp;
     private boolean isRoot;
@@ -40,16 +40,8 @@ public class SenderManager implements Runnable {
                 }
 
                 adjustMaxReceivedTimestamp(event);
-                /*
-                if(event instanceof InitTextEvent){
-                    while(senders.isEmpty()){
-                        Thread.sleep(50);
-                    }
-                }
-                */
 
-
-                for (TextEventSender sender : senders) {
+                for (EventSender sender : senders) {
                     sender.put(event);
                 }
                 if(event instanceof ShutDownEvent) {
@@ -62,7 +54,7 @@ public class SenderManager implements Runnable {
         }
     }
 
-    public void addSender(TextEventSender sender, JTextArea area) throws InterruptedException {
+    public void addSender(EventSender sender, JTextArea area) throws InterruptedException {
         //send all of text area to new client
         sender.put(new InitTextEvent(maxReceivedTimestamp, area.getText()));
         senders.put(sender);

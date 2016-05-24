@@ -11,21 +11,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DocumentEventCapturer extends DocumentFilter {
 
     private boolean enabled;
-    private LinkedBlockingQueue<MyTextEvent> eventHistory;
+    private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
     private LamportClock lamportClock;
 
-    public DocumentEventCapturer(LamportClock lamportClock) {
+    public DocumentEventCapturer(LamportClock lamportClock, LinkedBlockingQueue<MyTextEvent> outgoingEvents) {
         this.enabled = true;
-        this.eventHistory = new LinkedBlockingQueue<>();
+        this.outgoingEvents = outgoingEvents;
         this.lamportClock = lamportClock;
     }
 
-    public LinkedBlockingQueue<MyTextEvent> getEventHistory() {
-        return eventHistory;
-    }
-
+    // TODO potential problem calling this method
     public void reset() {
-        eventHistory.clear();
+        outgoingEvents.clear();
         lamportClock.reset();
     }
 
@@ -42,7 +39,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 
         if (enabled) {
             TextInsertEvent event = new TextInsertEvent(lamportClock.getTime(), offset, str);
-            eventHistory.add(event);
+            outgoingEvents.add(event);
         } else {
             super.insertString(fb, offset, str, a);
         }
@@ -52,7 +49,7 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
         if (enabled) {
             TextRemoveEvent event = new TextRemoveEvent(lamportClock.getTime(), offset, length);
-            eventHistory.add(event);
+            outgoingEvents.add(event);
         } else {
             super.remove(fb, offset, length);
         }
@@ -64,10 +61,10 @@ public class DocumentEventCapturer extends DocumentFilter {
         if (enabled) {
             if (length > 0) {
                 event = new TextRemoveEvent(lamportClock.getTime(), offset, length);
-                eventHistory.add(event);
+                outgoingEvents.add(event);
             }
             event = new TextInsertEvent(lamportClock.getTime() + 1, offset, str);
-            eventHistory.add(event);
+            outgoingEvents.add(event);
 
         } else {
             super.remove(fb, offset, length);
