@@ -110,6 +110,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
             outgoingEvents.put(new RedirectEvent(parent));
             outgoingEvents.put(new ShutDownEvent(false));
             incomingEvents.put(new ShutDownEvent(false));
+            localClientHandler.terminate();
             Utility.deregisterOnPort(serverSocket);
             serverSocket = null;
             parent = null;
@@ -121,9 +122,18 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     }
 
     private void handleRootDisconnect() {
+
         redirectSender = senderManager.getRedirectSender();
         try {
-            redirectSender.put(new RootAssignEvent(0, false));
+            localClientHandler.terminate();
+            if(redirectSender == null) {
+                incomingEvents.put(new ShutDownEvent(false));
+                Utility.deregisterOnPort(serverSocket);
+            } else {
+                redirectSender.put(new RootAssignEvent(0, false));
+            }
+
+
         } catch (InterruptedException e) {}
 
 

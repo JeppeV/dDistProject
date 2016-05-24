@@ -14,8 +14,10 @@ public class LocalClientHandler implements EventSender {
     private LamportClock lamportClock;
     private LinkedBlockingQueue<MyTextEvent> incomingEvents;
     private boolean terminated = false;
+    private JTextArea textArea;
 
     public LocalClientHandler(JTextArea textArea, LinkedBlockingQueue<MyTextEvent> outgoingEvents) {
+        this.textArea = textArea;
         this.lamportClock = new LamportClock();
         DocumentEventCapturer documentEventCapturer = new DocumentEventCapturer(lamportClock, outgoingEvents);
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(documentEventCapturer);
@@ -33,5 +35,12 @@ public class LocalClientHandler implements EventSender {
     @Override
     public boolean isTerminated() {
         return terminated;
+    }
+
+    public void terminate() throws InterruptedException {
+        incomingEvents.put(new ShutDownEvent(false));
+        ((AbstractDocument) textArea.getDocument()).setDocumentFilter(null);
+        terminated = true;
+
     }
 }
