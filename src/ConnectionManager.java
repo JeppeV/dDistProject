@@ -20,7 +20,6 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
     private SenderManager senderManager; // A thread for managing the Sender threads of several clients
-    private JTextArea textArea;
     private Peer parent;
     private LocalClientHandler localClientHandler;
 
@@ -28,9 +27,9 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         init(localPort, textArea);
         this.outgoingEvents = null;
         this.parent = null;
-        this.senderManager = new SenderManager(incomingEvents, true);
+        this.senderManager = new SenderManager(textArea, incomingEvents, true);
         new Thread(senderManager).start();
-        senderManager.addSender(localClientHandler.startLocalClient(), textArea);
+        senderManager.addSender(localClientHandler);
         System.out.println("I am Root");
 
 
@@ -40,16 +39,15 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         init(localPort, textArea);
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.parent = new Peer(IPAddress, remotePort);
-        this.senderManager = new SenderManager(outgoingEvents, false);
+        this.senderManager = new SenderManager(textArea, outgoingEvents, false);
         new Thread(senderManager).start();
-        senderManager.addSender(localClientHandler.startLocalClient(), textArea);
+        senderManager.addSender(localClientHandler);
         initParentConnection(IPAddress, remotePort);
         System.out.println("I am a Peer");
     }
 
     private void init(int localPort, JTextArea textArea) {
         this.serverSocket = Utility.registerOnPort(localPort);
-        this.textArea = textArea;
         this.incomingEvents = new LinkedBlockingQueue<>();
         this.localClientHandler = new LocalClientHandler(textArea, incomingEvents);
     }
@@ -74,7 +72,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
         Utility.startRunnable(sender);
         Utility.startRunnable(receiver);
-        senderManager.addSender(sender, textArea);
+        senderManager.addSender(sender);
     }
 
     public void initParentConnection(String IPAddress, int portNumber) {

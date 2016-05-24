@@ -14,13 +14,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class SenderManager implements Runnable {
 
+    private JTextArea textArea;
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
     private LinkedBlockingQueue<EventSender> senders;
     private HashMap<Integer, MyTextEvent> eventLog;
     private int maxReceivedTimestamp;
     private boolean isRoot;
 
-    public SenderManager(LinkedBlockingQueue<MyTextEvent> outgoingEvents, boolean isRoot) {
+    public SenderManager(JTextArea textArea, LinkedBlockingQueue<MyTextEvent> outgoingEvents, boolean isRoot) {
+        this.textArea = textArea;
         this.outgoingEvents = outgoingEvents;
         this.senders = new LinkedBlockingQueue<>();
         this.eventLog = new HashMap<>();
@@ -54,11 +56,10 @@ public class SenderManager implements Runnable {
         }
     }
 
-    public void addSender(EventSender sender, JTextArea area) {
-
+    public void addSender(EventSender sender) {
         try{
             //send all of text area to new client
-            sender.put(new InitTextEvent(maxReceivedTimestamp, area.getText()));
+            sender.put(new InitTextEvent(maxReceivedTimestamp, textArea.getText()));
             senders.put(sender);
         } catch (InterruptedException e){
             e.printStackTrace();

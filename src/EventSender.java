@@ -3,5 +3,5 @@
  */
 public interface EventSender {
 
-    public void put(MyTextEvent event) throws InterruptedException;
+    void put(MyTextEvent event) throws InterruptedException;
 }
