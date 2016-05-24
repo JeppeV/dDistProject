@@ -1,26 +1,20 @@
 import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
 
     private static final int DEFAULT_PORT_NUMBER = 40103;
+
     private JTextArea textArea = new JTextArea(20, 120);
-    private JTextField ipaddress = new JTextField("Insert IP address to connect to here");
-    private JTextField remotePortNumber = new JTextField("" + DEFAULT_PORT_NUMBER);
-    private JTextField localPortNumber = new JTextField("" + DEFAULT_PORT_NUMBER);
+    private JTextField IPAddressField = new JTextField("Insert IP address to connect to here");
+    private JTextField remotePortNumberField = new JTextField("" + DEFAULT_PORT_NUMBER);
+    private JTextField localPortNumberField = new JTextField("" + DEFAULT_PORT_NUMBER);
 
     private DisconnectHandler disconnectHandler;
-    private LinkedBlockingQueue<MyTextEvent> incomingEvents;
-    private LamportClock lamportClock;
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -44,9 +38,9 @@ public class DistributedTextEditor extends JFrame {
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         content.add(scroll1, BorderLayout.CENTER);
 
-        content.add(ipaddress, BorderLayout.CENTER);
-        content.add(remotePortNumber, BorderLayout.CENTER);
-        content.add(localPortNumber, BorderLayout.CENTER);
+        content.add(IPAddressField, BorderLayout.CENTER);
+        content.add(remotePortNumberField, BorderLayout.CENTER);
+        content.add(localPortNumberField, BorderLayout.CENTER);
 
 
         JMenuBar JMB = new JMenuBar();
@@ -81,39 +75,12 @@ public class DistributedTextEditor extends JFrame {
 
     }
 
-    /**
-     * Initialize stuff, that is not GUI related.
-     * A buffer that keeps track of local events
-     * A DocumentEventCapturer to capture local events when entered on the keyboard.
-     * A queue whereon to put new incoming events
-     * An EventReplayer to replay remote events locally.
-
-    private void init() {
-        lamportClock = new LamportClock();
-        dec = new DocumentEventCapturer(lamportClock);
-        ((AbstractDocument) textArea.getDocument()).setDocumentFilter(dec);
-        incomingEvents = new LinkedBlockingQueue<>();
-        EventReplayer eventReplayer = new EventReplayer(incomingEvents, textArea, dec);
-        Utility.startRunnable(eventReplayer);
-    }
-     */
-
-    /**
-     * When the menu item "Listen" is clicked, we begin listening for incoming connections on the
-     * port indicated by DEFAULT_PORT_NUMBER. A thread running a ConnectionManager is started
-     * which handles all actions relevant to acting as a server.
-     * Afterwards, this peer connects to its own server process and
-     * in that way becomes a client as well.
-     */
-
-
     private DisconnectHandler startAsRoot() {
         String localAddress = Utility.getLocalHostAddress();
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea);
         Utility.startRunnable(connectionManager);
         setTitle("I'm listening on: " + localAddress + ":" + localPort);
-        System.out.println("I am Root");
         return connectionManager;
     }
 
@@ -123,23 +90,20 @@ public class DistributedTextEditor extends JFrame {
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
         Utility.startRunnable(connectionManager);
         setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
-        System.out.println("I am a Peer");
         return connectionManager;
     }
 
 
-
-
     private String getIPAddress() {
-        return ipaddress.getText();
+        return IPAddressField.getText();
     }
 
     private int getLocalPortNumber() {
-        return Integer.parseInt(localPortNumber.getText());
+        return Integer.parseInt(localPortNumberField.getText());
     }
 
     private int getRemotePortNumber() {
-        return Integer.parseInt(remotePortNumber.getText());
+        return Integer.parseInt(remotePortNumberField.getText());
     }
 
     private void clearTextArea() {
@@ -151,19 +115,14 @@ public class DistributedTextEditor extends JFrame {
             saveOld();
             clearTextArea();
             disconnectHandler = startAsRoot();
-            if (disconnectHandler != null) {
-                setMenuItemsConfigurationToConnected();
-            }
+            setMenuItemsConfigurationToConnected();
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
         }
     };
 
-    /**
-     * When the menu item "Connect" is clicked, the peer acts as a client and attempts to connect the the host
-     * indicated by the ipaddress and localPortNumber fields
-     */
+
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
@@ -172,12 +131,10 @@ public class DistributedTextEditor extends JFrame {
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
 
-            // Connecting to the server
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getRemotePortNumber() + "...");
             disconnectHandler = startAsPeer(getIPAddress(), getRemotePortNumber());
-            if (disconnectHandler != null) {
-                setMenuItemsConfigurationToConnected();
-            }
+            setMenuItemsConfigurationToConnected();
+
         }
     };
 
@@ -273,28 +230,28 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void clearTextFieldsWhenClicked() {
-        ipaddress.addMouseListener(new MouseAdapter() {
+        IPAddressField.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                ipaddress.setText("");
-                ipaddress.removeMouseListener(this);
+                IPAddressField.setText("");
+                IPAddressField.removeMouseListener(this);
             }
         });
 
-        localPortNumber.addMouseListener(new MouseAdapter() {
+        localPortNumberField.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                localPortNumber.setText("");
-                localPortNumber.removeMouseListener(this);
+                localPortNumberField.setText("");
+                localPortNumberField.removeMouseListener(this);
 
             }
         });
 
-        remotePortNumber.addMouseListener(new MouseAdapter() {
+        remotePortNumberField.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                remotePortNumber.setText("");
-                remotePortNumber.removeMouseListener(this);
+                remotePortNumberField.setText("");
+                remotePortNumberField.removeMouseListener(this);
             }
         });
     }

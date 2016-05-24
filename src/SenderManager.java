@@ -54,14 +54,16 @@ public class SenderManager implements Runnable {
         }
     }
 
-    public void addSender(EventSender sender, JTextArea area) throws InterruptedException {
-        //send all of text area to new client
-        sender.put(new InitTextEvent(maxReceivedTimestamp, area.getText()));
-        senders.put(sender);
-    }
+    public void addSender(EventSender sender, JTextArea area) {
 
-    public void clearSenders() {
-        senders.clear();
+        try{
+            //send all of text area to new client
+            sender.put(new InitTextEvent(maxReceivedTimestamp, area.getText()));
+            senders.put(sender);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
     }
 
     private void adjustMaxReceivedTimestamp(MyTextEvent event){

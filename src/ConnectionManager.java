@@ -30,11 +30,9 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         this.parent = null;
         this.senderManager = new SenderManager(incomingEvents, true);
         new Thread(senderManager).start();
-        try {
-            senderManager.addSender(localClientHandler.startLocalClient(), textArea);
-        } catch (InterruptedException e) {
+        senderManager.addSender(localClientHandler.startLocalClient(), textArea);
+        System.out.println("I am Root");
 
-        }
 
     }
 
@@ -44,11 +42,9 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         this.parent = new Peer(IPAddress, remotePort);
         this.senderManager = new SenderManager(outgoingEvents, false);
         new Thread(senderManager).start();
-        try {
-            senderManager.addSender(localClientHandler.startLocalClient(), textArea);
-        } catch (InterruptedException e) {
-        }
+        senderManager.addSender(localClientHandler.startLocalClient(), textArea);
         initParentConnection(IPAddress, remotePort);
+        System.out.println("I am a Peer");
     }
 
     private void init(int localPort, JTextArea textArea) {
@@ -78,11 +74,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender);
         Utility.startRunnable(sender);
         Utility.startRunnable(receiver);
-        try {
-            senderManager.addSender(sender, textArea);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        senderManager.addSender(sender, textArea);
     }
 
     public void initParentConnection(String IPAddress, int portNumber) {
