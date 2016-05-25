@@ -51,7 +51,10 @@ public class TextEventReceiver implements Runnable {
 
                 } else if(textEvent instanceof RedirectEvent){
                     RedirectEvent e = (RedirectEvent) textEvent;
-                    handleRedirectEvent(e);
+                    if(handleRedirectEvent(e)) {
+                        shutdown = true;
+                        break;
+                    }
 
                 } else if(textEvent instanceof RootAssignEvent) {
                     RootAssignEvent e = (RootAssignEvent) textEvent;
@@ -91,9 +94,12 @@ public class TextEventReceiver implements Runnable {
         return shutdown;
     }
 
-    private void handleRedirectEvent(RedirectEvent event) {
-
+    private boolean handleRedirectEvent(RedirectEvent event) throws InterruptedException {
+        if(connectionManager.getThisPeer().equals(event.getPeer())) return false;
+        sender.put(new ShutDownEvent(false));
         connectionManager.redirectTo(event.getPeer());
+        return true;
+
     }
 
     private void handleRootAssignEvent(RootAssignEvent event) {

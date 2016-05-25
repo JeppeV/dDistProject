@@ -1,6 +1,7 @@
 package main;
 
 import events.MyTextEvent;
+import events.RedirectEvent;
 import events.RootAssignAckEvent;
 import events.RootAssignEvent;
 

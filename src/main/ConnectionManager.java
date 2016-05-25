@@ -94,9 +94,12 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     }
 
     public void redirectTo(Peer peer){
-        if(peer.equals(me)) return;
         initParentConnection(peer.getIPAddress(), peer.getPortNumber());
         parent = peer;
+    }
+
+    public Peer getThisPeer() {
+        return me;
     }
 
 
@@ -108,7 +111,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     public void disconnect() throws InterruptedException {
         if(parent != null){
             outgoingEvents.put(new RedirectEvent(parent));
-            outgoingEvents.put(new ShutDownEvent(false));
+            //outgoingEvents.put(new ShutDownEvent(false));
             incomingEvents.put(new ShutDownEvent(false));
             localClientHandler.terminate();
             Utility.deregisterOnPort(serverSocket);
@@ -155,7 +158,7 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
             rae.setEventLog(eventLog);
             redirectSender.put(rae);
             System.out.println("RootAssignEvent sent to redirect peer");
-            incomingEvents.put(new ShutDownEvent(false));
+            redirectSender.put(new ShutDownEvent(false));
             System.out.println("ShutDownEvent sent to children of root");
         } catch (InterruptedException e) {}
         Utility.deregisterOnPort(serverSocket);
