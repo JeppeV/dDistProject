@@ -139,6 +139,11 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     }
 
+    /** ROOT METHOD
+     * @param peer: the peer that become the new root.
+     * setNewRoot is called when the roots TextEventReceiver receives a RootAssingAckEvent.
+     * Now the root knows who to connect his children to.
+     */
     public void setNewRoot(Peer peer) {
         System.out.println("SetNewRoot called");
         try{
@@ -158,6 +163,10 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     }
 
+    /**
+     * PEER METHOD
+     * This method is called when the peers TextEventReceiver receives a RootAssignEvent the first time.
+     */
     public void beginInitAsRoot() {
         System.out.println("BeingInitAsRoot called");
         try{
@@ -167,6 +176,12 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     }
 
+    /**
+     * PEER METHOD
+     * This method is called when a peer (the new root) receives the second time.
+     * From the RootAssignEvent the new root get all the information it needs
+     * @param rae: event containing: eventLog and assingIsFinished
+     */
     public void finishInitAsRoot(RootAssignEvent rae) {
         System.out.println("FinishedAsRoot called");
         parent = null;

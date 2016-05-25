@@ -92,6 +92,7 @@ public class TextEventReceiver implements Runnable {
     }
 
     private void handleRedirectEvent(RedirectEvent event) {
+
         connectionManager.redirectTo(event.getPeer());
     }
 
