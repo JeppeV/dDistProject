@@ -1,6 +1,4 @@
 import main.ConnectionManager;
-import main.DisconnectHandler;
-import main.DocumentEventCapturer;
 import main.Utility;
 
 import javax.swing.*;
@@ -19,19 +17,17 @@ public class DistributedTextEditor extends JFrame {
     private JTextField remotePortNumberField = new JTextField("" + DEFAULT_PORT_NUMBER);
     private JTextField localPortNumberField = new JTextField("" + DEFAULT_PORT_NUMBER);
 
-    private DisconnectHandler disconnectHandler;
+    private ConnectionManager connectionManager;
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private DocumentEventCapturer dec;
 
     public DistributedTextEditor() {
 
-        //init();
-        clearTextFieldsWhenClicked();
+        addTextFieldPlaceholderListeners();
 
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         Container content = getContentPane();
@@ -80,20 +76,30 @@ public class DistributedTextEditor extends JFrame {
 
     }
 
-    private DisconnectHandler startAsRoot() {
+    /**
+     * This method is used when the 'Listen' event is fired. It sets up this peer as root of the connection tree.
+     * @return the ConnectionManager instance, used for disconnecting
+     */
+    private ConnectionManager startAsRoot() {
         String localAddress = Utility.getLocalHostAddress();
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea);
-        Utility.startRunnable(connectionManager);
+        Utility.startRunnables(connectionManager);
         setTitle("I'm listening on: " + localAddress + ":" + localPort);
         return connectionManager;
     }
 
-    private DisconnectHandler startAsPeer(String IPAddress, int portNumber) {
+    /**
+     * This method is used when the 'Connect' event is fired. It sets up this peer as leaf of in the connection tree.
+     * @param IPAddress the IPAddress of the parent peer we wish to connect to
+     * @param portNumber the portNumber of the parent peer we wish to connect to
+     * @return the ConnectionManager instance, used for disconnecting
+     */
+    private ConnectionManager startAsPeer(String IPAddress, int portNumber) {
         String localAddress = Utility.getLocalHostAddress();
         int localPort = getLocalPortNumber();
         ConnectionManager connectionManager = new ConnectionManager(localPort, textArea, IPAddress, portNumber);
-        Utility.startRunnable(connectionManager);
+        Utility.startRunnables(connectionManager);
         setTitle("I'm a peer and I'm listening on: " + localAddress + ":" + localPort);
         return connectionManager;
     }
@@ -115,11 +121,15 @@ public class DistributedTextEditor extends JFrame {
         textArea.setText("");
     }
 
+    /**
+     * This action is performed when the 'Listen' menu item is clicked.
+     * When that happens, this peer is added as root in the connection tree.
+     */
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
             clearTextArea();
-            disconnectHandler = startAsRoot();
+            connectionManager = startAsRoot();
             setMenuItemsConfigurationToConnected();
             changed = false;
             Save.setEnabled(false);
@@ -127,7 +137,10 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-
+    /**
+     * This action is performed when the 'Connect' menu item is clicked.
+     * When that happens, this peer is added as a leaf in the connection tree.
+     */
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
             saveOld();
@@ -137,7 +150,7 @@ public class DistributedTextEditor extends JFrame {
             SaveAs.setEnabled(false);
 
             setTitle("Attempting to connect to: " + getIPAddress() + ":" + getRemotePortNumber() + "...");
-            disconnectHandler = startAsPeer(getIPAddress(), getRemotePortNumber());
+            connectionManager = startAsPeer(getIPAddress(), getRemotePortNumber());
             setMenuItemsConfigurationToConnected();
 
         }
@@ -145,15 +158,15 @@ public class DistributedTextEditor extends JFrame {
 
 
     /**
-     * When pressing disconnect, the disconnect handler for this peer is used in order to
-     * disconnect from the network.
+     * This action is performed when the 'Disconnect' menu item is clicked.
+     * When that happens, this peer is removed from the connection tree.
      */
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
             setTitle("Disconnected");
             try {
-                disconnectHandler.disconnect();
-                disconnectHandler = null;
+                connectionManager.disconnect();
+                connectionManager = null;
             } catch (InterruptedException ie) {
                 //TODO
             }
@@ -234,7 +247,7 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    private void clearTextFieldsWhenClicked() {
+    private void addTextFieldPlaceholderListeners() {
         IPAddressField.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

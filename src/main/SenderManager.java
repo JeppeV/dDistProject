@@ -3,17 +3,15 @@ package main;
 import events.*;
 
 import javax.swing.*;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Jeppe Vinberg on 30-04-2016.
- * <p>
  * The resposibility of this class is to manage the sender theads for several clients.
  * If an event is put onto the outgoingEvents queue, this runnable will distribute this event to each
  * of its associated TextEventSenders.
- * When a new TextEventSender is added, all of the servers text area is sent to the client as the first event.
+ * When a new TextEventSender is added, all of the local text area is sent to the client as the first event.
  */
 public class SenderManager implements Runnable {
 
@@ -24,6 +22,12 @@ public class SenderManager implements Runnable {
     private int maxReceivedTimestamp;
     private boolean isRoot;
 
+    /**
+     * This constructor is used when a new Peer is created.
+     * @param textArea A reference to the local text area to send to newly connected clients.
+     * @param outgoingEvents A queue from which events are taken and multicasted to the associated clients.
+     * @param isRoot A boolean flag to indicate whether this peer is a root.
+     */
     public SenderManager(JTextArea textArea, LinkedBlockingQueue<MyTextEvent> outgoingEvents, boolean isRoot) {
         this.textArea = textArea;
         this.outgoingEvents = outgoingEvents;
@@ -33,12 +37,18 @@ public class SenderManager implements Runnable {
         this.isRoot = isRoot;
     }
 
-    public SenderManager(JTextArea textArea, LinkedBlockingQueue<MyTextEvent> outgoingEvents, boolean isRoot, LinkedBlockingQueue<EventSender> senders, RootAssignEvent rootAssignEvent){
-        this(textArea, outgoingEvents, isRoot);
+    /**
+     * This constructor is used when a peer is assigned to become root.
+     * @param textArea A reference to the local text area to send to newly connected clients.
+     * @param outgoingEvents A queue from which events are taken and multicasted to the associated clients.
+     * @param senders An initial list of sender to send events to.
+     * @param rootAssignEvent The RootAssignEvent sent from the current root containing information to make this SenderManager behave as at the root.
+     */
+    public SenderManager(JTextArea textArea, LinkedBlockingQueue<MyTextEvent> outgoingEvents, LinkedBlockingQueue<EventSender> senders, RootAssignEvent rootAssignEvent){
+        this(textArea, outgoingEvents, true);
         this.senders = senders;
         this.eventLog = rootAssignEvent.getEventLog();
         this.maxReceivedTimestamp = rootAssignEvent.getTimestamp();
-        System.out.println("New SenderManager created");
     }
 
     public LinkedBlockingQueue<EventSender> getSenders() {
@@ -86,6 +96,9 @@ public class SenderManager implements Runnable {
         return maxReceivedTimestamp;
     }
 
+    /**This method is used by the root peer to select a random client to be assigned as the new root upon disconnect
+     * @return a TextEventSender to be assigned
+     */
     public EventSender getRedirectSender() {
         for(EventSender sender : senders) {
             if(sender instanceof TextEventSender && !sender.isTerminated()) {
@@ -104,6 +117,14 @@ public class SenderManager implements Runnable {
         maxReceivedTimestamp = Math.max(event.getTimestamp(), maxReceivedTimestamp);
     }
 
+    /**
+     * This method is used for correcting the timestamp order and offset of events from different clients.
+     * The method is only used by the root peer, as it is his responsibility to determine these things.
+     * This class keeps an eventLog object that is the final authority on what events came in what order.
+     * Refer to the report for further explanation of the functionality.
+     * @param event the event for which the timestamp and offset must be adjusted
+     * @return the adjusted event to be sent to the clients.
+     */
     private MyTextEvent adjustOffset(MyTextEvent event) {
         MyTextEvent e;
         while ((e = eventLog.get(event.getTimestamp())) != null || (event.getTimestamp() < maxReceivedTimestamp)) {

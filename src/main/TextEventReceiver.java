@@ -1,9 +1,6 @@
 package main;
 
-import events.MyTextEvent;
-import events.RedirectEvent;
-import events.RootAssignAckEvent;
-import events.RootAssignEvent;
+import events.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -36,7 +33,7 @@ public class TextEventReceiver implements Runnable {
     @Override
     public void run() {
         MyTextEvent textEvent;
-        boolean shutdown;
+        boolean closeSocket;
         ObjectInputStream objectInputStream;
 
         try {
@@ -46,13 +43,13 @@ public class TextEventReceiver implements Runnable {
 
                 if (textEvent instanceof ShutDownEvent) {
                     ShutDownEvent e = (ShutDownEvent) textEvent;
-                    shutdown = handleShutDownEvent(e);
+                    closeSocket = handleShutDownEvent(e);
                     break;
 
                 } else if(textEvent instanceof RedirectEvent){
                     RedirectEvent e = (RedirectEvent) textEvent;
                     if(handleRedirectEvent(e)) {
-                        shutdown = true;
+                        closeSocket = true;
                         break;
                     }
 
@@ -63,14 +60,14 @@ public class TextEventReceiver implements Runnable {
                 } else if(textEvent instanceof RootAssignAckEvent) {
                     RootAssignAckEvent e = (RootAssignAckEvent) textEvent;
                     handleRootAssignAckEvent(e);
-                    shutdown = false;
+                    closeSocket = false;
                     break;
 
                 } else {
                     incomingEvents.put(textEvent);
                 }
             }
-            if (shutdown) {
+            if (closeSocket) {
                 objectInputStream.close();
             }
 
@@ -85,9 +82,9 @@ public class TextEventReceiver implements Runnable {
     }
 
     private boolean handleShutDownEvent(ShutDownEvent event) throws InterruptedException {
-        boolean shutdown = event.getShutdown();
+        boolean shutdown = event.getCloseSocket();
         if (!shutdown) {
-            event.setShutdown(true);
+            event.setCloseSocket(true);
             //initiate termination of corresponding sender thread
             sender.put(event);
         }
@@ -102,7 +99,7 @@ public class TextEventReceiver implements Runnable {
 
     }
 
-    private void handleRootAssignEvent(RootAssignEvent event) {
+    private void handleRootAssignEvent(RootAssignEvent event) throws InterruptedException {
         System.out.println("Received RootAssignEvent, with: " + event.assignIsFinished());
         if (!event.assignIsFinished()) {
             connectionManager.beginInitAsRoot();

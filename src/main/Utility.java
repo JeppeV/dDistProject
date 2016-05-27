@@ -11,9 +11,10 @@ import java.net.UnknownHostException;
  */
 public abstract class Utility {
 
-    public static  void startRunnable(Runnable runnable){
-        Thread thread = new Thread(runnable);
-        thread.start();
+    public static  void startRunnables(Runnable... runnables){
+        for(Runnable runnable : runnables){
+            new Thread(runnable).start();
+        }
     }
 
     public static String getLocalHostAddress() {

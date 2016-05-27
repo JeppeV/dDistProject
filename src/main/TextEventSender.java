@@ -1,9 +1,6 @@
 package main;
 
-import events.MyTextEvent;
-import events.RedirectEvent;
-import events.RootAssignAckEvent;
-import events.RootAssignEvent;
+import events.*;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -17,11 +14,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  * When a new object is caught by the DocumentEventCapturer, the TextEventSender takes the object off the outgoingQueue and sends it
  * to the corresponding socket.
  */
-public class TextEventSender implements Runnable, DisconnectHandler, EventSender {
+public class TextEventSender implements Runnable, EventSender {
 
     private Socket socket;
     private LinkedBlockingQueue<MyTextEvent> outgoingQueue;
-    boolean shutdown;
     boolean terminated = false;
 
     public TextEventSender(Socket socket) {
@@ -47,6 +43,8 @@ public class TextEventSender implements Runnable, DisconnectHandler, EventSender
     public void run() {
         MyTextEvent textEvent;
         ObjectOutputStream objectOutputStream;
+        boolean closeSocket;
+
         try {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while (true) {
@@ -54,7 +52,7 @@ public class TextEventSender implements Runnable, DisconnectHandler, EventSender
                 objectOutputStream.writeObject(textEvent);
 
                 if(textEvent instanceof RootAssignAckEvent){
-                    System.out.println("Sender sent RootAssignAckEvent");
+                    closeSocket = false;
                     break;
                 }
 
@@ -62,17 +60,18 @@ public class TextEventSender implements Runnable, DisconnectHandler, EventSender
                     RootAssignEvent e = (RootAssignEvent) textEvent;
                     if(e.assignIsFinished()){
                         objectOutputStream.writeObject(new ShutDownEvent(true));
+                        closeSocket = true;
                         break;
                     }
 
                 }
 
                 if (textEvent instanceof ShutDownEvent) {
-                    shutdown = ((ShutDownEvent) textEvent).getShutdown();
+                    closeSocket = ((ShutDownEvent) textEvent).getCloseSocket();
                     break;
                 }
             }
-            if (shutdown) {
+            if (closeSocket) {
                 objectOutputStream.close();
             }
 
@@ -86,8 +85,4 @@ public class TextEventSender implements Runnable, DisconnectHandler, EventSender
         }
     }
 
-    @Override
-    public void disconnect() throws InterruptedException {
-        outgoingQueue.put(new ShutDownEvent(false));
-    }
 }

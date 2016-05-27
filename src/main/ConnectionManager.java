@@ -1,9 +1,6 @@
 package main;
 
-import events.MyTextEvent;
-import events.RedirectEvent;
-import events.RootAssignAckEvent;
-import events.RootAssignEvent;
+import events.*;
 
 import javax.swing.*;
 import java.net.ServerSocket;
@@ -13,41 +10,53 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Jeppe Vinberg on 15-04-2016.
- * <p>
- * For a peer acting as server, the resposibility of the ConnectionManager is to await
- * incoming connections from clients, and delegate a TextEventSender and TextEventCapturer to handle communication with
- * this socket. It is also responsible for initializing all server related processes and objects.
+ * The responsibility of the ConnectionManager class is to listen for incoming connections,
+ * and setup threads for handling communication with these threads.
  */
-public class ConnectionManager implements Runnable, DisconnectHandler {
+public class ConnectionManager implements Runnable {
 
     private ServerSocket serverSocket; // The ServerSocket related to this server
     private LinkedBlockingQueue<MyTextEvent> incomingEvents; // A shared queue for exchanging incoming events between threads
     private LinkedBlockingQueue<MyTextEvent> outgoingEvents;
     private SenderManager senderManager; // A thread for managing the Sender threads of several clients
-    private Peer parent, me;
+    private Peer parent; // A Peer object representing the parent peer of this peer
+    private Peer me; // A Peer object representing this peer
     private int localPort;
-    private TextEventSender toRootSender;
+    private TextEventSender toParentSender; // The TextEventSender instance responsible for sending events to the parent
     private JTextArea textArea;
-
-    private EventSender redirectSender;
     private LocalClientHandler localClientHandler;
 
+    private EventSender redirectSender;
+
+
+    /**
+     * This constructor is used for the root peer.
+     * @param localPort the port on which this peer listens for connections.
+     * @param textArea the text area which content should be sent to newly connected clients.
+     */
     public ConnectionManager(int localPort, JTextArea textArea) {
         init(localPort, textArea);
         this.outgoingEvents = null;
         this.parent = null;
         this.senderManager = new SenderManager(textArea, incomingEvents, true);
-        new Thread(senderManager).start();
+        Utility.startRunnables(senderManager);
         senderManager.addSender(localClientHandler);
         System.out.println("I am Root");
     }
 
+    /**
+     * This constructor is used for leaf peers.
+     * @param localPort the port on which this peer listen for connections.
+     * @param textArea the text area which content should be sent to newly connected clients.
+     * @param IPAddress the IPAddress of the parent of this peer.
+     * @param remotePort the portNumber of the parent of this peer.
+     */
     public ConnectionManager(int localPort, JTextArea textArea, String IPAddress, int remotePort){
         init(localPort, textArea);
         this.outgoingEvents = new LinkedBlockingQueue<>();
         this.parent = new Peer(IPAddress, remotePort);
         this.senderManager = new SenderManager(textArea, outgoingEvents, false);
-        new Thread(senderManager).start();
+        Utility.startRunnables(senderManager);
         senderManager.addSender(localClientHandler);
         initParentConnection(IPAddress, remotePort);
         System.out.println("I am a Peer");
@@ -77,22 +86,35 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         }
     }
 
+    /**
+     * A method for setting up threads to handle communication with a newly connected client,
+     * and adding them to the SenderManager instance.
+     * @param socket the socket connetion to the newly connected client.
+     */
     private void initClientThreads(Socket socket) {
         TextEventSender sender = new TextEventSender(socket);
         TextEventReceiver receiver = new TextEventReceiver(socket, incomingEvents, sender, this);
-        Utility.startRunnable(sender);
-        Utility.startRunnable(receiver);
+        Utility.startRunnables(sender, receiver);
         senderManager.addSender(sender);
     }
 
-    public void initParentConnection(String IPAddress, int portNumber) {
+
+    /**
+     * A method for setting up threads to handle communication with the parent peer.
+     * @param IPAddress the IPAddress of the parent peer
+     * @param portNumber the portNumber of the parent peer
+     */
+    private void initParentConnection(String IPAddress, int portNumber) {
         Socket rootSocket = Utility.connectToServer(IPAddress, portNumber);
-        toRootSender = new TextEventSender(rootSocket, incomingEvents);
-        TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, toRootSender, this);
-        Utility.startRunnable(toRootSender);
-        Utility.startRunnable(receiver);
+        toParentSender = new TextEventSender(rootSocket, incomingEvents);
+        TextEventReceiver receiver = new TextEventReceiver(rootSocket, outgoingEvents, toParentSender, this);
+        Utility.startRunnables(toParentSender, receiver);
     }
 
+    /**
+     * A method used for handling redirecting leaf peers, that is, change their parent connection
+     * @param peer
+     */
     public void redirectTo(Peer peer){
         initParentConnection(peer.getIPAddress(), peer.getPortNumber());
         parent = peer;
@@ -102,12 +124,11 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
         return me;
     }
 
-
-
-
-
-
-    @Override
+    /**
+     * This method is used to begin the disconnect operation.
+     * It will operate differently depending on whether this peer is root or not.
+     * @throws InterruptedException
+     */
     public void disconnect() throws InterruptedException {
         if(parent != null){
             outgoingEvents.put(new RedirectEvent(parent));
@@ -124,8 +145,12 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
 
     }
 
+    /**
+     * This method is used when this peer is root and the disconnect menu item is clicked.
+     * In that case, a random child is chosen to be assigned as the new root
+     * by sending a RootAssignEvent.
+     */
     private void handleRootDisconnect() {
-
         redirectSender = senderManager.getRedirectSender();
         try {
             localClientHandler.terminate();
@@ -136,30 +161,27 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
                 redirectSender.put(new RootAssignEvent(0, false));
             }
 
-
         } catch (InterruptedException e) {}
 
 
     }
 
-    /** ROOT METHOD
-     * @param peer: the peer that become the new root.
-     * setNewRoot is called when the roots TextEventReceiver receives a RootAssingAckEvent.
-     * Now the root knows who to connect his children to.
+    /** This method is called when the root receives a RootAssignAckEvent from peer
+     * that is about to become the new root.
+     * The method redirects all other child peers to the new root peer and sends a new
+     * RootAssignEvent to the new root which contains all the information he needs
+     * in order to function as a root.
+     * @param peer the Peer object representing the peer that is about to become root.
      */
     public void setNewRoot(Peer peer) {
-        System.out.println("SetNewRoot called");
         try{
             incomingEvents.put(new RedirectEvent(peer));
-            System.out.println("RedirectEvent sent to children");
             int maxReceivedTimestamp = senderManager.getMaxReceivedTimestamp();
             ConcurrentHashMap<Integer,MyTextEvent> eventLog = senderManager.getEventLog();
             RootAssignEvent rae = new RootAssignEvent(maxReceivedTimestamp, true);
             rae.setEventLog(eventLog);
             redirectSender.put(rae);
-            System.out.println("RootAssignEvent sent to redirect peer");
-            redirectSender.put(new ShutDownEvent(false));
-            System.out.println("ShutDownEvent sent to children of root");
+            //redirectSender.put(new ShutDownEvent(false));
         } catch (InterruptedException e) {}
         Utility.deregisterOnPort(serverSocket);
         serverSocket = null;
@@ -167,33 +189,28 @@ public class ConnectionManager implements Runnable, DisconnectHandler {
     }
 
     /**
-     * PEER METHOD
-     * This method is called when the peers TextEventReceiver receives a RootAssignEvent the first time.
+     * This method is called when the first RootAssignEvent is received from the parent peer.
+     * It simply sends a RootAssignAckEvent to the root to tell him where to redirect his children.
      */
-    public void beginInitAsRoot() {
-        System.out.println("BeingInitAsRoot called");
-        try{
-            toRootSender.put(new RootAssignAckEvent(new Peer(Utility.getLocalHostAddress(), localPort)));
-            System.out.println("RootAssignAckEvent sent");
-        } catch (InterruptedException e){}
-
+    public void beginInitAsRoot() throws InterruptedException {
+        toParentSender.put(new RootAssignAckEvent(new Peer(Utility.getLocalHostAddress(), localPort)));
     }
 
     /**
-     * PEER METHOD
-     * This method is called when a peer (the new root) receives the second time.
-     * From the RootAssignEvent the new root get all the information it needs
-     * @param rae: event containing: eventLog and assingIsFinished
+     * This method is called when the second RootAssignEvent is received from the parent peer.
+     * The core responsibility is to create a new SenderManager that contains the
+     * TextEventSenders from the old SenderManager and the EventLog from root SenderManager
+     * @param rae the second RootAssignEvent sent from the server, containing all the information
+     *            needed for this peer to behave as the root peer
      */
     public void finishInitAsRoot(RootAssignEvent rae) {
-        System.out.println("FinishedAsRoot called");
         parent = null;
         outgoingEvents = null;
-        toRootSender = null;
+        toParentSender = null;
         LinkedBlockingQueue<EventSender> senders = senderManager.getSenders();
-        senderManager = new SenderManager(textArea, incomingEvents, true, senders, rae);
-        Utility.startRunnable(senderManager);
-        System.out.println("I have been assigned to become Root");
+        senderManager = new SenderManager(textArea, incomingEvents, senders, rae);
+        Utility.startRunnables(senderManager);
+        System.out.println("I have become root.");
     }
 
 
